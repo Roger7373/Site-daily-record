@@ -1,1 +1,22 @@
-
+{
+  "name": "Site Daily Record",
+  "short_name": "Daily Record",
+  "start_url": "/Site-daily-record/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "orientation": "portrait",
+  "description": "工地工人出勤、OT、预支与月结工资记录",
+  "icons": [
+    {
+      "src": "/Site-daily-record/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Site-daily-record/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

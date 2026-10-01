@@ -173,4 +173,1400 @@ label{
 }
 
 .att-row{
-  border-bottom:1
+  border-bottom:1px solid #e5e7eb;
+  padding:12px 0;
+}
+
+.att-name{
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.att-buttons{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.att-btn{
+  padding:7px 10px;
+  font-size:13px;
+}
+
+.att-present{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.att-off{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.att-absent{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.att-selected{
+  outline:3px solid #2563eb;
+}
+
+.ot-box{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.ot-box input{
+  width:90px;
+  margin:0;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:650px;
+}
+
+th,td{
+  padding:9px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:left;
+  font-size:13px;
+}
+
+th{
+  background:#f9fafb;
+}
+
+.total{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.empty{
+  text-align:center;
+  color:#6b7280;
+  padding:25px 10px;
+}
+
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  height:65px;
+  background:white;
+  border-top:1px solid #ddd;
+  display:flex;
+  justify-content:center;
+  z-index:20;
+  box-shadow:0 -2px 8px rgba(0,0,0,.08);
+}
+
+.nav-btn{
+  flex:1;
+  max-width:180px;
+  background:white;
+  color:#6b7280;
+  border-radius:0;
+  padding:7px 2px;
+  font-size:12px;
+}
+
+.nav-btn.active{
+  color:#2563eb;
+  font-weight:bold;
+}
+
+.nav-icon{
+  font-size:20px;
+  display:block;
+  margin-bottom:2px;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  width:100%;
+  max-width:450px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+.modal-title{
+  font-size:19px;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+
+.close-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+
+.month-row{
+  display:flex;
+  gap:10px;
+  align-items:end;
+  flex-wrap:wrap;
+}
+
+.month-row label{
+  flex:1;
+  min-width:150px;
+}
+
+.small{
+  font-size:12px;
+  color:#6b7280;
+}
+
+.amount{
+  font-weight:bold;
+}
+
+.danger-zone{
+  border:1px solid #fecaca;
+  background:#fff7f7;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏗️ Site Daily Record</h1>
+  <p>工人日勤 · OT · 预支薪水 · 月尾结算</p>
+</header>
+
+<div class="container">
+
+  <!-- 工人 -->
+  <section id="page-workers" class="page active">
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <h2>👷 工人名单</h2>
+          <div class="small">管理工人和每日工资</div>
+        </div>
+        <button class="btn-primary" onclick="openWorkerModal()">＋ 添加工人</button>
+      </div>
+    </div>
+
+    <div id="workersList"></div>
+
+  </section>
+
+
+  <!-- 日勤 -->
+  <section id="page-attendance" class="page">
+
+    <div class="card">
+      <h2>📅 每日日勤</h2>
+
+      <div class="month-row">
+
+        <label>
+          日期
+          <input type="date" id="attendanceDate" onchange="renderAttendance()">
+        </label>
+
+      </div>
+
+      <div class="small">
+        出勤 = 有工资　|　休息 = 无工资　|　缺勤 = 无工资
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="attendanceList"></div>
+    </div>
+
+  </section>
+
+
+  <!-- 薪资 -->
+  <section id="page-salary" class="page">
+
+    <div class="card">
+
+      <h2>💰 薪资</h2>
+
+      <div class="month-row">
+
+        <label>
+          结算月份
+          <input type="month" id="salaryMonth" onchange="renderSalary()">
+        </label>
+
+      </div>
+
+    </div>
+
+    <div id="salaryList"></div>
+
+  </section>
+
+
+  <!-- 结算 -->
+  <section id="page-summary" class="page">
+
+    <div class="card">
+
+      <h2>📊 月尾结算</h2>
+
+      <label>
+        结算月份
+        <input type="month" id="summaryMonth" onchange="renderSummary()">
+      </label>
+
+    </div>
+
+    <div id="summaryContent"></div>
+
+    <div class="card danger-zone">
+
+      <h2>⚠️ 数据管理</h2>
+
+      <p class="small">
+        清除后，工人、日勤和预支薪水资料都会被删除。
+      </p>
+
+      <button class="btn-red" onclick="clearAllData()">
+        清除全部资料
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<!-- 底部菜单 -->
+
+<div class="bottom-nav">
+
+  <button class="nav-btn active" id="nav-workers" onclick="showPage('workers')">
+    <span class="nav-icon">👷</span>
+    工人
+  </button>
+
+  <button class="nav-btn" id="nav-attendance" onclick="showPage('attendance')">
+    <span class="nav-icon">📅</span>
+    日勤
+  </button>
+
+  <button class="nav-btn" id="nav-salary" onclick="showPage('salary')">
+    <span class="nav-icon">💰</span>
+    薪资
+  </button>
+
+  <button class="nav-btn" id="nav-summary" onclick="showPage('summary')">
+    <span class="nav-icon">📊</span>
+    结算
+  </button>
+
+</div>
+
+
+<!-- 添加工人 -->
+
+<div class="modal" id="workerModal">
+
+  <div class="modal-box">
+
+    <div class="modal-title">
+      添加工人
+    </div>
+
+    <label>
+      工人姓名
+      <input id="workerName" placeholder="例如：Ali">
+    </label>
+
+    <label>
+      每日工资 RM
+      <input id="workerDailyRate" type="number" step="0.01" placeholder="例如：80">
+    </label>
+
+    <label>
+      OT 每小时 RM
+      <input id="workerOTRate" type="number" step="0.01" placeholder="例如：12">
+    </label>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+
+      <button class="btn-gray" onclick="closeWorkerModal()">
+        取消
+      </button>
+
+      <button class="btn-primary" onclick="addWorker()">
+        添加
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- 预支薪水 -->
+
+<div class="modal" id="advanceModal">
+
+  <div class="modal-box">
+
+    <div class="modal-title">
+      预支薪水
+    </div>
+
+    <div id="advanceWorkerName" style="font-weight:bold;margin-bottom:12px"></div>
+
+    <label>
+      日期
+      <input type="date" id="advanceDate">
+    </label>
+
+    <label>
+      预支金额 RM
+      <input type="number" id="advanceAmount" step="0.01" placeholder="例如：100">
+    </label>
+
+    <label>
+      备注
+      <input id="advanceNote" placeholder="例如：借薪">
+    </label>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+
+      <button class="btn-gray" onclick="closeAdvanceModal()">
+        取消
+      </button>
+
+      <button class="btn-orange" onclick="addAdvance()">
+        添加预支
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const WORKER_KEY = "siteWorkers";
+const ATT_KEY = "siteAttendance";
+const ADVANCE_KEY = "siteAdvances";
+
+let workers = JSON.parse(localStorage.getItem(WORKER_KEY) || "[]");
+let attendance = JSON.parse(localStorage.getItem(ATT_KEY) || "{}");
+let advances = JSON.parse(localStorage.getItem(ADVANCE_KEY) || "[]");
+
+let selectedAdvanceWorker = null;
+
+
+/* =========================
+   基本资料
+========================= */
+
+function saveData(){
+
+  localStorage.setItem(WORKER_KEY, JSON.stringify(workers));
+  localStorage.setItem(ATT_KEY, JSON.stringify(attendance));
+  localStorage.setItem(ADVANCE_KEY, JSON.stringify(advances));
+
+}
+
+
+/* =========================
+   页面切换
+========================= */
+
+function showPage(page){
+
+  document.querySelectorAll(".page").forEach(el=>{
+    el.classList.remove("active");
+  });
+
+  document.getElementById("page-" + page).classList.add("active");
+
+  document.querySelectorAll(".nav-btn").forEach(el=>{
+    el.classList.remove("active");
+  });
+
+  document.getElementById("nav-" + page).classList.add("active");
+
+
+  if(page === "workers"){
+    renderWorkers();
+  }
+
+  if(page === "attendance"){
+    renderAttendance();
+  }
+
+  if(page === "salary"){
+    renderSalary();
+  }
+
+  if(page === "summary"){
+    renderSummary();
+  }
+
+}
+
+
+/* =========================
+   工人
+========================= */
+
+function openWorkerModal(){
+
+  document.getElementById("workerName").value = "";
+  document.getElementById("workerDailyRate").value = "";
+  document.getElementById("workerOTRate").value = "";
+
+  document.getElementById("workerModal").classList.add("show");
+
+}
+
+
+function closeWorkerModal(){
+
+  document.getElementById("workerModal").classList.remove("show");
+
+}
+
+
+function addWorker(){
+
+  const name = document.getElementById("workerName").value.trim();
+
+  const dailyRate =
+    Number(document.getElementById("workerDailyRate").value);
+
+  const otRate =
+    Number(document.getElementById("workerOTRate").value);
+
+
+  if(!name){
+
+    alert("请输入工人姓名");
+
+    return;
+
+  }
+
+
+  if(dailyRate <= 0){
+
+    alert("请输入正确的每日工资");
+
+    return;
+
+  }
+
+
+  if(otRate < 0){
+
+    alert("请输入正确的 OT 工资");
+
+    return;
+
+  }
+
+
+  workers.push({
+
+    id:Date.now().toString(),
+
+    name:name,
+
+    dailyRate:dailyRate,
+
+    otRate:otRate
+
+  });
+
+
+  saveData();
+
+  closeWorkerModal();
+
+  renderWorkers();
+
+}
+
+
+function deleteWorker(id){
+
+  const worker = workers.find(w => w.id === id);
+
+  if(!worker) return;
+
+
+  if(!confirm("确定要删除 " + worker.name + " 吗？")){
+
+    return;
+
+  }
+
+
+  workers = workers.filter(w => w.id !== id);
+
+  saveData();
+
+  renderWorkers();
+
+}
+
+
+function renderWorkers(){
+
+  const box = document.getElementById("workersList");
+
+  if(!workers.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        还没有工人<br><br>
+        点击「＋ 添加工人」开始
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML = workers.map(worker => `
+
+    <div class="card worker">
+
+      <div class="worker-name">
+        ${escapeHTML(worker.name)}
+      </div>
+
+      <div class="worker-info">
+        Daily：RM ${money(worker.dailyRate)}
+        &nbsp; · &nbsp;
+        OT：RM ${money(worker.otRate)}/小时
+      </div>
+
+      <div class="worker-actions">
+
+        <button
+          class="btn-orange"
+          onclick="openAdvanceModal('${worker.id}')">
+          ＋ 预支薪水
+        </button>
+
+        <button
+          class="btn-red"
+          onclick="deleteWorker('${worker.id}')">
+          删除
+        </button>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+
+
+/* =========================
+   日勤
+========================= */
+
+function getToday(){
+
+  const d = new Date();
+
+  const y = d.getFullYear();
+
+  const m = String(d.getMonth()+1).padStart(2,"0");
+
+  const day = String(d.getDate()).padStart(2,"0");
+
+  return `${y}-${m}-${day}`;
+
+}
+
+
+function getMonth(){
+
+  return getToday().slice(0,7);
+
+}
+
+
+document.getElementById("attendanceDate").value = getToday();
+
+document.getElementById("salaryMonth").value = getMonth();
+
+document.getElementById("summaryMonth").value = getMonth();
+
+
+function getAttendanceKey(date,id){
+
+  return date + "_" + id;
+
+}
+
+
+function getAttendance(id,date){
+
+  const key = getAttendanceKey(date,id);
+
+  return attendance[key] || {
+    status:"present",
+    ot:0
+  };
+
+}
+
+
+function setAttendance(id,date,status){
+
+  const key = getAttendanceKey(date,id);
+
+  const old = attendance[key] || {};
+
+  attendance[key] = {
+
+    status:status,
+
+    ot:Number(old.ot || 0)
+
+  };
+
+
+  saveData();
+
+  renderAttendance();
+
+}
+
+
+function setOT(id,date,value){
+
+  const key = getAttendanceKey(date,id);
+
+  const old = attendance[key] || {
+    status:"present",
+    ot:0
+  };
+
+
+  attendance[key] = {
+
+    status:old.status || "present",
+
+    ot:Number(value) || 0
+
+  };
+
+
+  saveData();
+
+}
+
+
+function renderAttendance(){
+
+  const date =
+    document.getElementById("attendanceDate").value || getToday();
+
+  const box =
+    document.getElementById("attendanceList");
+
+
+  if(!workers.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        请先到「工人」添加工人
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML = workers.map(worker => {
+
+    const data = getAttendance(worker.id,date);
+
+    const selectedPresent =
+      data.status === "present" ? "att-selected" : "";
+
+    const selectedOff =
+      data.status === "off" ? "att-selected" : "";
+
+    const selectedAbsent =
+      data.status === "absent" ? "att-selected" : "";
+
+
+    return `
+
+      <div class="att-row">
+
+        <div class="att-name">
+          ${escapeHTML(worker.name)}
+        </div>
+
+        <div class="att-buttons">
+
+          <button
+            class="att-btn att-present ${selectedPresent}"
+            onclick="setAttendance('${worker.id}','${date}','present')">
+            ✓ 出勤
+          </button>
+
+          <button
+            class="att-btn att-off ${selectedOff}"
+            onclick="setAttendance('${worker.id}','${date}','off')">
+            休息
+          </button>
+
+          <button
+            class="att-btn att-absent ${selectedAbsent}"
+            onclick="setAttendance('${worker.id}','${date}','absent')">
+            缺勤
+          </button>
+
+        </div>
+
+        <div class="ot-box">
+
+          <span>OT 小时：</span>
+
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            value="${Number(data.ot || 0)}"
+            onchange="setOT('${worker.id}','${date}',this.value)">
+
+        </div>
+
+      </div>
+
+    `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+   薪资计算
+========================= */
+
+function getMonthData(workerId,month){
+
+  let presentDays = 0;
+
+  let otHours = 0;
+
+
+  Object.keys(attendance).forEach(key => {
+
+    if(!key.startsWith(month + "-")) return;
+
+    if(!key.endsWith("_" + workerId)) return;
+
+    const data = attendance[key];
+
+    if(data.status === "present"){
+
+      presentDays++;
+
+    }
+
+    otHours += Number(data.ot || 0);
+
+  });
+
+
+  return {
+
+    presentDays:presentDays,
+
+    otHours:otHours
+
+  };
+
+}
+
+
+function getAdvance(workerId,month){
+
+  return advances
+    .filter(a =>
+      a.workerId === workerId &&
+      a.date.startsWith(month)
+    )
+    .reduce((sum,a)=>sum + Number(a.amount || 0),0);
+
+}
+
+
+function calculateSalary(worker,month){
+
+  const data = getMonthData(worker.id,month);
+
+  const basePay =
+    data.presentDays * Number(worker.dailyRate);
+
+  const otPay =
+    data.otHours * Number(worker.otRate);
+
+  const advance =
+    getAdvance(worker.id,month);
+
+  const net =
+    basePay + otPay - advance;
+
+
+  return {
+
+    presentDays:data.presentDays,
+
+    otHours:data.otHours,
+
+    basePay:basePay,
+
+    otPay:otPay,
+
+    advance:advance,
+
+    net:net
+
+  };
+
+}
+
+
+function renderSalary(){
+
+  const month =
+    document.getElementById("salaryMonth").value || getMonth();
+
+  const box =
+    document.getElementById("salaryList");
+
+
+  if(!workers.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        还没有工人
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML = workers.map(worker => {
+
+    const s = calculateSalary(worker,month);
+
+
+    return `
+
+      <div class="card">
+
+        <h2>${escapeHTML(worker.name)}</h2>
+
+        <div class="grid">
+
+          <div class="stat">
+            <div class="stat-title">出勤天数</div>
+            <div class="stat-value">${s.presentDays}</div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-title">OT 小时</div>
+            <div class="stat-value">${s.otHours}</div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-title">基本工资</div>
+            <div class="stat-value">
+              RM ${money(s.basePay)}
+            </div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-title">OT 工资</div>
+            <div class="stat-value">
+              RM ${money(s.otPay)}
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:15px">
+
+          <div>
+            预支薪水：
+            <span class="amount">
+              RM ${money(s.advance)}
+            </span>
+          </div>
+
+          <hr>
+
+          <div class="total">
+            应付：
+            RM ${money(s.net)}
+          </div>
+
+        </div>
+
+        <div style="margin-top:12px">
+
+          <button
+            class="btn-orange"
+            onclick="openAdvanceModal('${worker.id}')">
+            ＋ 添加预支
+          </button>
+
+          <button
+            class="btn-gray"
+            onclick="showWorkerSalary('${worker.id}','${month}')">
+            查看预支记录
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+   预支薪水
+========================= */
+
+function openAdvanceModal(workerId){
+
+  const worker =
+    workers.find(w => w.id === workerId);
+
+  if(!worker) return;
+
+  selectedAdvanceWorker = workerId;
+
+  document.getElementById("advanceWorkerName").textContent =
+    worker.name;
+
+  document.getElementById("advanceDate").value =
+    getToday();
+
+  document.getElementById("advanceAmount").value = "";
+
+  document.getElementById("advanceNote").value = "";
+
+  document.getElementById("advanceModal").classList.add("show");
+
+}
+
+
+function closeAdvanceModal(){
+
+  document.getElementById("advanceModal").classList.remove("show");
+
+  selectedAdvanceWorker = null;
+
+}
+
+
+function addAdvance(){
+
+  if(!selectedAdvanceWorker) return;
+
+
+  const date =
+    document.getElementById("advanceDate").value;
+
+  const amount =
+    Number(document.getElementById("advanceAmount").value);
+
+  const note =
+    document.getElementById("advanceNote").value.trim();
+
+
+  if(!date){
+
+    alert("请选择日期");
+
+    return;
+
+  }
+
+
+  if(amount <= 0){
+
+    alert("请输入正确的预支金额");
+
+    return;
+
+  }
+
+
+  advances.push({
+
+    id:Date.now().toString(),
+
+    workerId:selectedAdvanceWorker,
+
+    date:date,
+
+    amount:amount,
+
+    note:note
+
+  });
+
+
+  saveData();
+
+  closeAdvanceModal();
+
+  renderSalary();
+
+  renderSummary();
+
+}
+
+
+function showWorkerSalary(workerId,month){
+
+  const worker =
+    workers.find(w => w.id === workerId);
+
+  if(!worker) return;
+
+
+  const records =
+    advances.filter(a =>
+      a.workerId === workerId &&
+      a.date.startsWith(month)
+    );
+
+
+  if(!records.length){
+
+    alert(worker.name + " 在 " + month + " 没有预支记录");
+
+    return;
+
+  }
+
+
+  let text =
+    worker.name + " - " + month + "\n\n";
+
+
+  records.forEach(a => {
+
+    text +=
+      a.date +
+      "   RM " +
+      money(a.amount) +
+      (a.note ? "   " + a.note : "") +
+      "\n";
+
+  });
+
+
+  text +=
+    "\n总预支：RM " +
+    money(getAdvance(workerId,month));
+
+
+  alert(text);
+
+}
+
+
+/* =========================
+   月尾结算
+========================= */
+
+function renderSummary(){
+
+  const month =
+    document.getElementById("summaryMonth").value || getMonth();
+
+  const box =
+    document.getElementById("summaryContent");
+
+
+  if(!workers.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        还没有工人
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  let totalBase = 0;
+
+  let totalOT = 0;
+
+  let totalAdvance = 0;
+
+  let totalNet = 0;
+
+
+  const rows = workers.map(worker => {
+
+    const s =
+      calculateSalary(worker,month);
+
+
+    totalBase += s.basePay;
+
+    totalOT += s.otPay;
+
+    totalAdvance += s.advance;
+
+    totalNet += s.net;
+
+
+    return `
+
+      <tr>
+
+        <td>${escapeHTML(worker.name)}</td>
+
+        <td>${s.presentDays}</td>
+
+        <td>${s.otHours}</td>
+
+        <td>RM ${money(s.basePay)}</td>
+
+        <td>RM ${money(s.otPay)}</td>
+
+        <td>RM ${money(s.advance)}</td>
+
+        <td><b>RM ${money(s.net)}</b></td>
+
+      </tr>
+
+    `;
+
+  }).join("");
+
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <div class="grid">
+
+        <div class="stat">
+          <div class="stat-title">基本工资</div>
+          <div class="stat-value">
+            RM ${money(totalBase)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-title">OT</div>
+          <div class="stat-value">
+            RM ${money(totalOT)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-title">预支</div>
+          <div class="stat-value">
+            RM ${money(totalAdvance)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-title">应付总额</div>
+          <div class="stat-value">
+            RM ${money(totalNet)}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        ${month} 月尾结算
+      </h2>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>工人</th>
+              <th>出勤</th>
+              <th>OT</th>
+              <th>基本</th>
+              <th>OT薪资</th>
+              <th>预支</th>
+              <th>应付</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${rows}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================
+   清除资料
+========================= */
+
+function clearAllData(){
+
+  if(!confirm(
+    "确定要清除全部资料吗？\n\n工人、日勤、预支薪水都会被删除。"
+  )){
+
+    return;
+
+  }
+
+
+  workers = [];
+
+  attendance = {};
+
+  advances = [];
+
+  saveData();
+
+  renderWorkers();
+
+  renderAttendance();
+
+  renderSalary();
+
+  renderSummary();
+
+  alert("资料已经清除");
+
+}
+
+
+/* =========================
+   工具
+========================= */
+
+function money(value){
+
+  return Number(value || 0).toFixed(2);
+
+}
+
+
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+   初始化
+========================= */
+
+function init(){
+
+  document.getElementById("attendanceDate").value =
+    getToday();
+
+  document.getElementById("salaryMonth").value =
+    getMonth();
+
+  document.getElementById("summaryMonth").value =
+    getMonth();
+
+  renderWorkers();
+
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>

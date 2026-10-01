@@ -1,4 +1,4 @@
-const CACHE = "site-daily-record-v1";
+const CACHE = "site-daily-record-v2";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));

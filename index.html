@@ -104,17 +104,17 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;font-size:1
 let workers=[];
 let photos=[];
 const today=new Date().toISOString().slice(0,10);
-date.value=today;
+document.getElementById('date').value=today;
 
 function addWorker(){
- const n=newWorker.value.trim(); if(!n)return;
+ const n=document.getElementById('newWorker').value.trim(); if(!n)return;
  workers.push({name:n,status:'Present',dailyRate:0,otRate:0});
- newWorker.value=''; render();
+ document.getElementById('newWorker').value=''; render();
 }
 function setStatus(i,s){workers[i].status=s;render()}
 function removeWorker(i){workers.splice(i,1);render()}
 function render(){
- workerCount.textContent='('+workers.length+')';
+ document.getElementById('workerCount').textContent='('+workers.length+')';
  workersEl=document.getElementById('workers');
  workersEl.innerHTML=workers.map((w,i)=>`
  <div class="worker">
@@ -123,9 +123,9 @@ function render(){
    ${['Present','Absent','MC','Leave','Half Day'].map(s=>`<button class="pill ${w.status===s?'active':''}" onclick="setStatus(${i},'${s}')">${s}</button>`).join('')}
   </div>
  </div>`).join('');
- present.textContent=workers.filter(x=>x.status==='Present'||x.status==='Half Day').length;
- absent.textContent=workers.filter(x=>x.status==='Absent').length;
- mc.textContent=workers.filter(x=>x.status==='MC').length;
+ document.getElementById('present').textContent=workers.filter(x=>x.status==='Present'||x.status==='Half Day').length;
+ document.getElementById('absent').textContent=workers.filter(x=>x.status==='Absent').length;
+ document.getElementById('mc').textContent=workers.filter(x=>x.status==='MC').length;
  renderSalaryWorkers();
  renderOTWorkers();
 }
@@ -183,17 +183,19 @@ function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt
 function saveRecord(){
  const otByWorker={};
 workers.forEach((w,i)=>{const el=document.getElementById('ot_'+i); if(el) otByWorker[w.name]=Number(el.value||0)});
-const data={project:project.value,site:site.value,date:date.value,supervisor:supervisor.value,workers,work:work.value,remarks:remarks.value,ot:ot.value,otByWorker};
- localStorage.setItem('siteDailyRecord_'+date.value,JSON.stringify(data));
+const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), workEl=document.getElementById('work'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
+const data={project:projectEl.value,site:siteEl.value,date:dateEl.value,supervisor:supervisorEl.value,workers,work:workEl.value,remarks:remarksEl.value,ot:otEl.value,otByWorker};
+ localStorage.setItem('siteDailyRecord_'+dateEl.value,JSON.stringify(data));
  alert('已保存今天的 Daily Record。');
 }
 function printReport(){
- const p=project.value||'Site Daily Record';
+ const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), workEl=document.getElementById('work'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
+ const p=projectEl.value||'Site Daily Record';
  const rows=workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.status)}</td></tr>`).join('');
  const html=`<html><head><title>${esc(p)}</title><style>body{font-family:Arial;padding:25px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #aaa;padding:8px;text-align:left}h1{font-size:22px}.box{margin:10px 0}</style></head><body>
- <h1>Daily Site Record</h1><div class="box"><b>Project:</b> ${esc(p)}</div><div class="box"><b>Site:</b> ${esc(site.value)}</div><div class="box"><b>Date:</b> ${esc(date.value)}</div><div class="box"><b>Supervisor:</b> ${esc(supervisor.value)}</div>
+ <h1>Daily Site Record</h1><div class="box"><b>Project:</b> ${esc(p)}</div><div class="box"><b>Site:</b> ${esc(siteEl.value)}</div><div class="box"><b>Date:</b> ${esc(dateEl.value)}</div><div class="box"><b>Supervisor:</b> ${esc(supervisorEl.value)}</div>
  <h3>Attendance</h3><table><tr><th>Worker</th><th>Status</th></tr>${rows}</table>
- <h3>Work Done</h3><p>${esc(work.value).replace(/\n/g,'<br>')}</p><h3>OT</h3><p>${esc(ot.value)} hours</p><h3>Remarks</h3><p>${esc(remarks.value).replace(/\n/g,'<br>')}</p>
+ <h3>Work Done</h3><p>${esc(workEl.value).replace(/\n/g,'<br>')}</p><h3>OT</h3><p>${esc(otEl.value)} hours</p><h3>Remarks</h3><p>${esc(remarksEl.value).replace(/\n/g,'<br>')}</p>
  <script>window.onload=()=>window.print()<\/script><script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));

@@ -1675,6 +1675,16 @@ function init(){
 
 init();
 
+<script>
+  // 你原本的程序代码
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/Site-daily-record/sw.js");
+  });
+}
 </script>
 
 </body>

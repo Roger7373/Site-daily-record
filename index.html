@@ -1044,9 +1044,66 @@ function getAdvance(workerId,month){
 }
 
 
+function getPreviousDebt(workerId, month){
+
+  let debt = 0;
+
+  const months = new Set();
+
+  Object.keys(attendance).forEach(key => {
+
+    const date = key.split("_")[0];
+
+    if(date && date.length >= 7){
+      months.add(date.slice(0,7));
+    }
+
+  });
+
+  advances.forEach(a => {
+
+    if(a.workerId === workerId && a.date){
+      months.add(a.date.slice(0,7));
+    }
+
+  });
+
+  const sortedMonths = Array.from(months)
+    .filter(m => m < month)
+    .sort();
+
+  sortedMonths.forEach(m => {
+
+    const data = getMonthData(workerId,m);
+
+    const worker = workers.find(w => w.id === workerId);
+
+    if(!worker) return;
+
+    const earnings =
+      data.presentDays * Number(worker.dailyRate) +
+      data.otHours * Number(worker.otRate);
+
+    const advance =
+      getAdvance(workerId,m);
+
+    debt =
+      Math.max(
+        0,
+        debt + advance - earnings
+      );
+
+  });
+
+  return debt;
+
+}
+
+
 function calculateSalary(worker,month){
 
-  const data = getMonthData(worker.id,month);
+  const data =
+    getMonthData(worker.id,month);
 
   const basePay =
     data.presentDays * Number(worker.dailyRate);
@@ -1054,12 +1111,29 @@ function calculateSalary(worker,month){
   const otPay =
     data.otHours * Number(worker.otRate);
 
-  const advance =
+  const currentAdvance =
     getAdvance(worker.id,month);
 
-  const net =
-    basePay + otPay - advance;
+  const previousDebt =
+    getPreviousDebt(worker.id,month);
 
+  const totalEarnings =
+    basePay + otPay;
+
+  const totalDeduction =
+    previousDebt + currentAdvance;
+
+  const net =
+    Math.max(
+      0,
+      totalEarnings - totalDeduction
+    );
+
+  const outstandingDebt =
+    Math.max(
+      0,
+      totalDeduction - totalEarnings
+    );
 
   return {
 
@@ -1071,15 +1145,19 @@ function calculateSalary(worker,month){
 
     otPay:otPay,
 
-    advance:advance,
+    advance:currentAdvance,
 
-    net:net
+    previousDebt:previousDebt,
+
+    totalEarnings:totalEarnings,
+
+    net:net,
+
+    outstandingDebt:outstandingDebt
 
   };
 
 }
-
-
 function renderSalary(){
 
   const month =
@@ -1141,43 +1219,73 @@ function renderSalary(){
 
         </div>
 
-        <div style="margin-top:15px">
+<div style="margin-top:15px">
 
-          <div>
-            预支薪水：
-            <span class="amount">
-              RM ${money(s.advance)}
-            </span>
-          </div>
+  <div>
+    本月工资：
+    <span class="amount">
+      RM ${money(s.totalEarnings)}
+    </span>
+  </div>
 
-          <hr>
+  <div style="margin-top:6px">
+    上月欠款：
+    <span class="amount">
+      RM ${money(s.previousDebt)}
+    </span>
+  </div>
 
-          <div class="total">
-            应付：
-            RM ${money(s.net)}
-          </div>
+  <div style="margin-top:6px">
+    本月预支：
+    <span class="amount">
+      RM ${money(s.advance)}
+    </span>
+  </div>
 
-        </div>
+  <hr>
 
-        <div style="margin-top:12px">
+  <div class="total">
+    本月应付：
+    RM ${money(s.net)}
+  </div>
 
-          <button
-            class="btn-orange"
-            onclick="openAdvanceModal('${worker.id}')">
-            ＋ 添加预支
-          </button>
-
-          <button
-            class="btn-gray"
-            onclick="showWorkerSalary('${worker.id}','${month}')">
-            查看预支记录
-          </button>
-
-        </div>
-
+  ${
+    s.outstandingDebt > 0
+    ? `
+      <div style="
+        margin-top:10px;
+        padding:10px;
+        background:#fff7ed;
+        border-radius:8px;
+        color:#c2410c;
+        font-weight:bold;
+      ">
+        尚欠预支：
+        RM ${money(s.outstandingDebt)}
       </div>
+    `
+    : ""
+  }
 
-    `;
+</div>
+
+<div style="margin-top:12px">
+
+  <button
+    class="btn-orange"
+    onclick="openAdvanceModal('${worker.id}')">
+    ＋ 添加预支
+  </button>
+
+  <button
+    class="btn-gray"
+    onclick="showWorkerSalary('${worker.id}','${month}')">
+    查看预支记录
+  </button>
+
+</div>
+
+</div>
 
   }).join("");
 

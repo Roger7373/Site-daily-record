@@ -788,10 +788,16 @@ function renderWorkers(){
         </button>
 
         <button
-          class="btn-red"
-          onclick="deleteWorker('${worker.id}')">
-          删除
-        </button>
+    class="btn-red"
+    onclick="deleteWorker('${worker.id}')">
+    删除
+</button>
+
+<button
+    class="btn-gray"
+    onclick="editWorker('${worker.id}')">
+    ✏️ 编辑
+</button>
 
       </div>
 

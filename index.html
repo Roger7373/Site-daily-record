@@ -1266,7 +1266,13 @@ function renderSalary(){
         尚欠预支：
         RM ${money(s.outstandingDebt)}
       </div>
-    `
+    `<div style="margin-top:12px">
+  <button
+    class="btn-gray"
+    onclick="editSalary('${worker.id}','${month}')">
+    ✏️ 编辑工资
+  </button>
+</div>
     : ""
   }
 

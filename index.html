@@ -4,10 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="description" content="工地日勤、预支薪水、OT、备注和月尾薪资结算">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="description" content="工地工人日勤、OT、预支薪水和月尾薪资">
 <title>Site Daily Record</title>
 
 <style>
@@ -17,52 +14,52 @@ body{
   margin:0;
   font-family:Arial,sans-serif;
   background:#f3f4f6;
-  color:#111827
+  color:#111827;
 }
 
 header{
   background:#111827;
-  color:#fff;
-  padding:18px 16px 14px;
+  color:white;
+  padding:18px 16px;
   position:sticky;
   top:0;
-  z-index:5
+  z-index:20;
 }
 
 header h1{
   margin:0;
-  font-size:21px
+  font-size:21px;
 }
 
 header small{
-  opacity:.75
+  opacity:.75;
 }
 
 main{
   max-width:700px;
   margin:auto;
-  padding:14px 14px 90px
+  padding:14px 14px 90px;
 }
 
 .card{
-  background:#fff;
+  background:white;
   border-radius:14px;
   padding:15px;
   margin-bottom:12px;
-  box-shadow:0 1px 5px #0001
+  box-shadow:0 1px 5px #0001;
 }
 
 .title{
-  font-size:16px;
+  font-size:17px;
   font-weight:800;
-  margin-bottom:8px
+  margin-bottom:10px;
 }
 
 label{
   display:block;
   font-weight:700;
   font-size:13px;
-  margin:10px 0 6px
+  margin:10px 0 6px;
 }
 
 input,select,textarea{
@@ -71,12 +68,7 @@ input,select,textarea{
   border:1px solid #d1d5db;
   border-radius:9px;
   font-size:15px;
-  background:#fff
-}
-
-textarea{
-  min-height:90px;
-  resize:vertical
+  background:white;
 }
 
 button{
@@ -86,91 +78,110 @@ button{
   font-weight:700;
   font-size:14px;
   cursor:pointer;
-  touch-action:manipulation
+  touch-action:manipulation;
 }
 
 button:active{
-  transform:scale(.98)
+  transform:scale(.97);
 }
 
 .primary{
   background:#2563eb;
-  color:#fff
+  color:white;
 }
 
 .secondary{
   background:#e5e7eb;
-  color:#111827
+  color:#111827;
 }
 
 .danger{
   background:#fee2e2;
-  color:#b91c1c
+  color:#b91c1c;
+}
+
+.success{
+  background:#dcfce7;
+  color:#166534;
 }
 
 .row{
   display:flex;
   gap:8px;
-  align-items:center
+  align-items:center;
 }
 
 .row>*{
-  flex:1
+  flex:1;
 }
 
 .worker{
   border:1px solid #e5e7eb;
   border-radius:11px;
   padding:12px;
-  margin:9px 0
+  margin:9px 0;
 }
 
 .worker-head{
   display:flex;
   justify-content:space-between;
   gap:8px;
-  align-items:center
+  align-items:center;
 }
 
 .worker-name{
-  font-weight:700
+  font-weight:700;
+  font-size:16px;
+}
+
+.muted{
+  color:#6b7280;
+  font-size:12px;
 }
 
 .pills{
   display:flex;
   gap:6px;
   flex-wrap:wrap;
-  margin-top:9px
+  margin-top:9px;
 }
 
 .pill{
   padding:8px 10px;
   border-radius:999px;
   background:#f3f4f6;
-  font-size:12px
+  font-size:12px;
+  cursor:pointer;
 }
 
 .pill.active{
   background:#2563eb;
-  color:#fff
+  color:white;
 }
 
 .summary{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:8px
+  gap:8px;
 }
 
 .stat{
   background:#f9fafb;
   border-radius:10px;
   padding:10px;
-  text-align:center
+  text-align:center;
 }
 
 .stat b{
   display:block;
-  font-size:20px
+  font-size:20px;
+  margin-bottom:3px;
+}
+
+.empty{
+  padding:12px 0;
+  color:#6b7280;
+  font-size:13px;
 }
 
 .nav{
@@ -178,34 +189,44 @@ button:active{
   bottom:0;
   left:0;
   right:0;
-  background:#fff;
+  background:white;
   border-top:1px solid #ddd;
   display:flex;
-  z-index:10
+  z-index:30;
 }
 
 .nav button{
   border-radius:0;
-  background:#fff;
+  background:white;
   flex:1;
-  padding:14px
+  padding:14px 5px;
 }
 
-.muted{
-  color:#6b7280;
-  font-size:12px
+.nav button.active{
+  color:#2563eb;
+  background:#eff6ff;
 }
 
-.empty{
-  padding:10px 0;
-  color:#6b7280;
-  font-size:13px
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.money{
+  font-weight:800;
+  font-size:18px;
 }
 
 table{
-  min-width:650px
+  width:100%;
+  border-collapse:collapse;
+  min-width:650px;
 }
 
 th,td{
-  padding:7px;
-  border-bottom:
+  padding:8px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:left;

@@ -1391,48 +1391,162 @@ function showWorkerSalary(workerId,month){
 
   if(!worker) return;
 
-
   const records =
     advances.filter(a =>
       a.workerId === workerId &&
       a.date.startsWith(month)
     );
 
-
   if(!records.length){
 
-    alert(worker.name + " 在 " + month + " 没有预支记录");
+    alert(
+      worker.name +
+      " - " +
+      month +
+      "\n\n没有预支记录"
+    );
 
     return;
-
   }
 
-
   let text =
-    worker.name + " - " + month + "\n\n";
+    worker.name +
+    " - " +
+    month +
+    "\n\n";
 
-
-  records.forEach(a => {
+  records.forEach((a,index) => {
 
     text +=
+      (index + 1) +
+      ". " +
       a.date +
       "   RM " +
       money(a.amount) +
-      
       "\n";
 
   });
-
 
   text +=
     "\n总预支：RM " +
     money(getAdvance(workerId,month));
 
-
   alert(text);
 
-}
 
+  const choice =
+    prompt(
+      "要编辑或删除哪一笔预支？\n\n" +
+      "请输入编号，例如：1\n" +
+      "如果不需要操作，请按取消"
+    );
+
+  if(choice === null) return;
+
+  const index =
+    Number(choice) - 1;
+
+  if(
+    !Number.isInteger(index) ||
+    !records[index]
+  ){
+
+    alert("编号无效");
+    return;
+  }
+
+  const record = records[index];
+
+  const action =
+    prompt(
+      "请选择操作：\n\n" +
+      "E = 编辑\n" +
+      "D = 删除"
+    );
+
+  if(action === null) return;
+
+
+  if(action.toUpperCase() === "D"){
+
+    const ok =
+      confirm(
+        "确定要删除这笔预支吗？\n\n" +
+        record.date +
+        "   RM " +
+        money(record.amount)
+      );
+
+    if(!ok) return;
+
+    const realIndex =
+      advances.findIndex(
+        a => a.id === record.id
+      );
+
+    if(realIndex !== -1){
+
+      advances.splice(realIndex,1);
+
+      saveData();
+      renderSalary();
+      renderSummary();
+
+      alert("预支记录已删除");
+    }
+
+    return;
+  }
+
+
+  if(action.toUpperCase() === "E"){
+
+    const newDate =
+      prompt(
+        "修改日期：",
+        record.date
+      );
+
+    if(newDate === null) return;
+
+    const newAmount =
+      prompt(
+        "修改预支金额 RM：",
+        record.amount
+      );
+
+    if(newAmount === null) return;
+
+    const amount =
+      Number(newAmount);
+
+    if(!newDate){
+
+      alert("日期不能为空");
+      return;
+    }
+
+    if(!Number.isFinite(amount) || amount <= 0){
+
+      alert("请输入正确的预支金额");
+      return;
+    }
+
+    record.date = newDate;
+    record.amount = amount;
+
+    saveData();
+    renderSalary();
+    renderSummary();
+
+    alert("预支记录已修改");
+
+    return;
+  }
+
+
+  alert("请输入 E 或 D");
+}
 
 /* =========================
    月尾结算

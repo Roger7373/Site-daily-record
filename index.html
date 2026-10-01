@@ -583,7 +583,8 @@ th{
 const WORKER_KEY = "siteWorkers";
 const ATT_KEY = "siteAttendance";
 const ADVANCE_KEY = "siteAdvances";
-
+const SALARY_KEY = "siteSalaryOverrides";
+let salaryOverrides = JSON.parse(localStorage.getItem(SALARY_KEY) || "{}");
 let workers = JSON.parse(localStorage.getItem(WORKER_KEY) || "[]");
 let attendance = JSON.parse(localStorage.getItem(ATT_KEY) || "{}");
 let advances = JSON.parse(localStorage.getItem(ADVANCE_KEY) || "[]");
@@ -599,8 +600,9 @@ function saveData(){
 
   localStorage.setItem(WORKER_KEY, JSON.stringify(workers));
   localStorage.setItem(ATT_KEY, JSON.stringify(attendance));
+  localStorage.setItem(SALARY_KEY, JSON.stringify(salaryOverrides));
   localStorage.setItem(ADVANCE_KEY, JSON.stringify(advances));
-
+localStorage.setItem(SALARY_KEY, JSON.stringify(salaryOverrides));
 }
 
 
@@ -1121,7 +1123,18 @@ function calculateSalary(worker,month){
     getPreviousDebt(worker.id,month);
 
   const totalEarnings =
-    basePay + otPay;
+  basePay + otPay;
+
+const overrideKey =
+  worker.id + "_" + month;
+
+const editedEarnings =
+  Object.prototype.hasOwnProperty.call(
+    salaryOverrides,
+    overrideKey
+  )
+  ? Number(salaryOverrides[overrideKey])
+  : totalEarnings;
 
   const totalDeduction =
     previousDebt + currentAdvance;
@@ -1129,13 +1142,13 @@ function calculateSalary(worker,month){
   const net =
     Math.max(
       0,
-      totalEarnings - totalDeduction
+      editedEarnings - totalDeduction
     );
 
   const outstandingDebt =
     Math.max(
       0,
-      totalDeduction - totalEarnings
+      totalDeduction - editedEarnings
     );
 
   return {
@@ -1152,13 +1165,62 @@ function calculateSalary(worker,month){
 
     previousDebt:previousDebt,
 
-    totalEarnings:totalEarnings,
+    totalEarnings:editedEarnings,
 
     net:net,
 
-    outstandingDebt:outstandingDebt
+    outstandingDebt:outstandingDebtF
 
   };
+
+}
+  function editSalary(workerId, month){
+
+  const worker =
+    workers.find(w => w.id === workerId);
+
+  if(!worker) return;
+
+  const key =
+    workerId + "_" + month;
+
+  const current =
+    Object.prototype.hasOwnProperty.call(
+      salaryOverrides,
+      key
+    )
+    ? Number(salaryOverrides[key])
+    : calculateSalary(worker, month).totalEarnings;
+
+  const value =
+    prompt(
+      worker.name +
+      " - " +
+      month +
+      "\n\n修改本月工资（基本 + OT）RM：",
+      current
+    );
+
+  if(value === null) return;
+
+  const amount =
+    Number(value);
+
+  if(!Number.isFinite(amount) || amount < 0){
+
+    alert("请输入正确的工资金额");
+
+    return;
+
+  }
+
+  salaryOverrides[key] = amount;
+
+  saveData();
+
+  renderSalary();
+
+  renderSummary();
 
 }
 function renderSalary(){
@@ -1266,19 +1328,18 @@ function renderSalary(){
         尚欠预支：
         RM ${money(s.outstandingDebt)}
       </div>
-    `<div style="margin-top:12px">
-  <button
-    class="btn-gray"
-    onclick="editSalary('${worker.id}','${month}')">
-    ✏️ 编辑工资
-  </button>
-</div>
+    `
     : ""
   }
 
 </div>
 
 <div style="margin-top:12px">
+<button
+  class="btn-gray"
+  onclick="editSalary('${worker.id}','${month}')">
+  ✏️ 编辑工资
+</button>
 
   <button
     class="btn-orange"
@@ -1292,7 +1353,7 @@ function renderSalary(){
     查看预支记录
   </button>
 
-</div>
+
 
 </div>
 

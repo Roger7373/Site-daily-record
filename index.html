@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="description" content="工地工人日勤、工作记录、OT、备注和现场照片">
+<meta name="description" content="工地工人日勤、预支薪水、OT、备注和月尾薪资结算">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Site Daily Record</title>
@@ -54,9 +54,9 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;font-size:1
 </div>
 
 <div class="card">
-<div class="title">📝 Work Done</div>
-<label>Today's Work</label>
-<textarea id="work" placeholder="例如：Install PPR pipe, install floor trap, testing..."></textarea>
+<div class="title">💵 Salary Advance / 预支薪水</div>
+<p class="muted">当天有预支薪水，就在对应工人输入金额；月尾结算会自动扣除。</p>
+<div id="advanceWorkers"></div>
 <label>Remarks</label>
 <textarea id="remarks" placeholder="现场备注 / 材料 / 问题 / RFI..."></textarea>
 </div>
@@ -148,6 +148,17 @@ function renderSalaryWorkers(){
    <div><label>OT 时薪 RM</label><input type="number" min="0" step="0.01" value="${w.otRate||0}" onchange="workers[${i}].otRate=Number(this.value)"></div>
   </div>
  </div>`).join('');
+ renderAdvanceWorkers();
+}
+function renderAdvanceWorkers(){
+ const box=document.getElementById('advanceWorkers');
+ if(!box)return;
+ box.innerHTML=workers.length ? workers.map((w,i)=>`
+ <div class="worker">
+  <div class="worker-name">${esc(w.name)}</div>
+  <label>今日预支薪水 RM</label>
+  <input id="advance_${i}" type="number" min="0" step="0.01" value="0" placeholder="0.00">
+ </div>`).join('') : '<p class="muted">请先添加工人。</p>';
 }
 function showMonthlySalary(){
  const month=document.getElementById('salaryMonth').value;
@@ -159,43 +170,49 @@ function showMonthlySalary(){
   if(raw){try{records.push(JSON.parse(raw))}catch(e){}}
  }
  const rows=workers.map(w=>{
-   let present=0, half=0, ot=0;
-   records.forEach(r=>(r.workers||[]).forEach(x=>{
-     if(x.name===w.name){
-       if(x.status==='Present') present++;
-       if(x.status==='Half Day'){present+=0.5;half++}
-       ot+=Number(r.otByWorker?.[w.name]||0);
-     }
-   }));
+   let present=0, half=0, ot=0, advance=0;
+   records.forEach(r=>{
+     (r.workers||[]).forEach(x=>{
+       if(x.name===w.name){
+         if(x.status==='Present') present++;
+         if(x.status==='Half Day'){present+=0.5;half++}
+       }
+     });
+     ot+=Number(r.otByWorker?.[w.name]||0);
+     advance+=Number(r.advanceByWorker?.[w.name]||0);
+   });
    const daily=Number(w.dailyRate||0), otr=Number(w.otRate||0);
-   const basic=present*daily, otpay=ot*otr, total=basic+otpay;
-   return {name:w.name,present,ot,basic,otpay,total};
+   const basic=present*daily, otpay=ot*otr, gross=basic+otpay, total=gross-advance;
+   return {name:w.name,present,ot,basic,otpay,advance,total};
  }).filter(x=>x.name);
  let total=0;
- const body=rows.map(x=>{total+=x.total;return `<tr><td>${esc(x.name)}</td><td>${x.present}</td><td>${x.ot}</td><td>RM ${x.basic.toFixed(2)}</td><td>RM ${x.otpay.toFixed(2)}</td><td><b>RM ${x.total.toFixed(2)}</b></td></tr>`}).join('');
+ const body=rows.map(x=>{total+=x.total;return `<tr><td>${esc(x.name)}</td><td>${x.present}</td><td>${x.ot}</td><td>RM ${x.basic.toFixed(2)}</td><td>RM ${x.otpay.toFixed(2)}</td><td>RM ${x.advance.toFixed(2)}</td><td><b>RM ${x.total.toFixed(2)}</b></td></tr>`}).join('');
  document.getElementById('monthlySalary').innerHTML=`
  <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px">
- <tr><th>工人</th><th>天数</th><th>OT</th><th>日薪</th><th>OT薪</th><th>合计</th></tr>${body}
+ <tr><th>工人</th><th>天数</th><th>OT</th><th>基本薪</th><th>OT薪</th><th>预支</th><th>应付</th></tr>${body}
  </table></div>
- <p><b>本月总薪资：RM ${total.toFixed(2)}</b></p>`;
+ <p><b>本月应付总薪资：RM ${total.toFixed(2)}</b></p>`;
 }
 function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function saveRecord(){
- const otByWorker={};
-workers.forEach((w,i)=>{const el=document.getElementById('ot_'+i); if(el) otByWorker[w.name]=Number(el.value||0)});
-const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), workEl=document.getElementById('work'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
-const data={project:projectEl.value,site:siteEl.value,date:dateEl.value,supervisor:supervisorEl.value,workers,work:workEl.value,remarks:remarksEl.value,ot:otEl.value,otByWorker};
+ const otByWorker={}, advanceByWorker={};
+workers.forEach((w,i)=>{
+ const el=document.getElementById('ot_'+i); if(el) otByWorker[w.name]=Number(el.value||0);
+ const adv=document.getElementById('advance_'+i); if(adv) advanceByWorker[w.name]=Number(adv.value||0);
+});
+const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
+const data={project:projectEl.value,site:siteEl.value,date:dateEl.value,supervisor:supervisorEl.value,workers,remarks:remarksEl.value,ot:otEl.value,otByWorker,advanceByWorker};
  localStorage.setItem('siteDailyRecord_'+dateEl.value,JSON.stringify(data));
  alert('已保存今天的 Daily Record。');
 }
 function printReport(){
- const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), workEl=document.getElementById('work'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
+ const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
  const p=projectEl.value||'Site Daily Record';
  const rows=workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.status)}</td></tr>`).join('');
  const html=`<html><head><title>${esc(p)}</title><style>body{font-family:Arial;padding:25px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #aaa;padding:8px;text-align:left}h1{font-size:22px}.box{margin:10px 0}</style></head><body>
  <h1>Daily Site Record</h1><div class="box"><b>Project:</b> ${esc(p)}</div><div class="box"><b>Site:</b> ${esc(siteEl.value)}</div><div class="box"><b>Date:</b> ${esc(dateEl.value)}</div><div class="box"><b>Supervisor:</b> ${esc(supervisorEl.value)}</div>
  <h3>Attendance</h3><table><tr><th>Worker</th><th>Status</th></tr>${rows}</table>
- <h3>Work Done</h3><p>${esc(workEl.value).replace(/\n/g,'<br>')}</p><h3>OT</h3><p>${esc(otEl.value)} hours</p><h3>Remarks</h3><p>${esc(remarksEl.value).replace(/\n/g,'<br>')}</p>
+<h3>OT</h3><p>${esc(otEl.value)} hours</p><h3>Remarks</h3><p>${esc(remarksEl.value).replace(/\n/g,'<br>')}</p>
  <script>window.onload=()=>window.print()<\/script><script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));

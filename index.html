@@ -1466,12 +1466,12 @@ function renderSummary(){
 
 
   let totalBase = 0;
-
   let totalOT = 0;
-
+  let totalEarnings = 0;
+  let totalPreviousDebt = 0;
   let totalAdvance = 0;
-
   let totalNet = 0;
+  let totalOutstandingDebt = 0;
 
 
   const rows = workers.map(worker => {
@@ -1481,31 +1481,63 @@ function renderSummary(){
 
 
     totalBase += s.basePay;
-
     totalOT += s.otPay;
-
+    totalEarnings += s.totalEarnings;
+    totalPreviousDebt += s.previousDebt;
     totalAdvance += s.advance;
-
     totalNet += s.net;
+    totalOutstandingDebt += s.outstandingDebt;
 
 
     return `
 
       <tr>
 
-        <td>${escapeHTML(worker.name)}</td>
+        <td>
+          <b>${escapeHTML(worker.name)}</b>
+        </td>
 
-        <td>${s.presentDays}</td>
+        <td>
+          ${s.presentDays}
+        </td>
 
-        <td>${s.otHours}</td>
+        <td>
+          ${s.otHours}
+        </td>
 
-        <td>RM ${money(s.basePay)}</td>
+        <td>
+          RM ${money(s.basePay)}
+        </td>
 
-        <td>RM ${money(s.otPay)}</td>
+        <td>
+          RM ${money(s.otPay)}
+        </td>
 
-        <td>RM ${money(s.advance)}</td>
+        <td>
+          RM ${money(s.totalEarnings)}
+        </td>
 
-        <td><b>RM ${money(s.net)}</b></td>
+        <td>
+          RM ${money(s.previousDebt)}
+        </td>
+
+        <td>
+          RM ${money(s.advance)}
+        </td>
+
+        <td>
+          <b>RM ${money(s.net)}</b>
+        </td>
+
+        <td>
+          ${
+            s.outstandingDebt > 0
+            ? `<span style="color:#c2410c;font-weight:bold">
+                 RM ${money(s.outstandingDebt)}
+               </span>`
+            : `RM 0.00`
+          }
+        </td>
 
       </tr>
 
@@ -1527,25 +1559,67 @@ function renderSummary(){
           </div>
         </div>
 
+
         <div class="stat">
-          <div class="stat-title">OT</div>
+          <div class="stat-title">OT 工资</div>
           <div class="stat-value">
             RM ${money(totalOT)}
           </div>
         </div>
 
+
         <div class="stat">
-          <div class="stat-title">预支</div>
+          <div class="stat-title">总工资</div>
+          <div class="stat-value">
+            RM ${money(totalEarnings)}
+          </div>
+        </div>
+
+
+        <div class="stat">
+          <div class="stat-title">本月预支</div>
           <div class="stat-value">
             RM ${money(totalAdvance)}
           </div>
         </div>
 
-        <div class="stat">
-          <div class="stat-title">应付总额</div>
-          <div class="stat-value">
-            RM ${money(totalNet)}
-          </div>
+      </div>
+
+
+      <div style="
+        margin-top:15px;
+        padding:12px;
+        background:#f9fafb;
+        border-radius:10px;
+      ">
+
+        <div style="margin-bottom:8px">
+          上月欠款：
+          <b>RM ${money(totalPreviousDebt)}</b>
+        </div>
+
+
+        <div style="margin-bottom:8px">
+          本月预支：
+          <b>RM ${money(totalAdvance)}</b>
+        </div>
+
+
+        <div style="margin-bottom:8px">
+          实际应付：
+          <b>RM ${money(totalNet)}</b>
+        </div>
+
+
+        <div style="
+          margin-top:10px;
+          padding-top:10px;
+          border-top:1px solid #e5e7eb;
+          color:#c2410c;
+          font-weight:bold;
+        ">
+          尚欠预支：
+          RM ${money(totalOutstandingDebt)}
         </div>
 
       </div>
@@ -1559,6 +1633,7 @@ function renderSummary(){
         ${month} 月尾结算
       </h2>
 
+
       <div class="table-wrap">
 
         <table>
@@ -1571,11 +1646,15 @@ function renderSummary(){
               <th>OT</th>
               <th>基本</th>
               <th>OT薪资</th>
-              <th>预支</th>
+              <th>本月工资</th>
+              <th>上月欠款</th>
+              <th>本月预支</th>
               <th>应付</th>
+              <th>尚欠</th>
             </tr>
 
           </thead>
+
 
           <tbody>
 
@@ -1592,7 +1671,6 @@ function renderSummary(){
   `;
 
 }
-
 
 /* =========================
    清除资料

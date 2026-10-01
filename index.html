@@ -4,229 +4,208 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="description" content="工地工人日勤、预支薪水、OT、备注和月尾薪资结算">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="description" content="工地日勤、预支薪水、OT、备注和月尾薪资结算">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <title>Site Daily Record</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}
-header{background:#111827;color:white;padding:18px 16px 14px;position:sticky;top:0;z-index:5}
-header h1{margin:0;font-size:21px}header small{opacity:.7}
-main{max-width:700px;margin:auto;padding:14px 14px 90px}
-.card{background:white;border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 1px 5px #0001}
-label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}
-input,select,textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;background:white}
-textarea{min-height:90px;resize:vertical}
-button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;font-size:14px;cursor:pointer}
-.primary{background:#2563eb;color:white}.secondary{background:#e5e7eb;color:#111827}.danger{background:#fee2e2;color:#b91c1c}
-.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
-.worker{border:1px solid #e5e7eb;border-radius:11px;padding:12px;margin:9px 0}
-.worker-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.worker-name{font-weight:700}
-.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.pill{padding:8px 10px;border-radius:999px;background:#f3f4f6;font-size:12px}.pill.active{background:#2563eb;color:#fff}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f9fafb;border-radius:10px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
-.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
-.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:10}.nav button{border-radius:0;background:white;flex:1;max-width:350px;padding:14px}
-.hidden{display:none}.muted{color:#6b7280;font-size:12px}.title{font-size:16px;font-weight:800;margin-bottom:8px}
-@media(min-width:650px){.nav{display:none}}
-</style>
-</head>
-<body>
-<header><h1>🏗️ Site Daily Record</h1><small>工地日勤 / Daily Site Record</small></header>
-<main>
-<section id="app">
-<div class="card">
-<div class="title">Project</div>
-<label>Project Name</label><input id="project" placeholder="例如：Taman ABC Plumbing Work">
-<label>Site Location</label><input id="site" placeholder="例如：Papar, Sabah">
-<div class="row">
-<div><label>Date</label><input id="date" type="date"></div>
-<div><label>Supervisor</label><input id="supervisor" placeholder="姓名"></div>
-</div>
-</div>
+*{box-sizing:border-box}
 
-<div class="card">
-<div class="title">👷 Workers <span class="muted" id="workerCount"></span></div>
-<div class="row">
-<input id="newWorker" placeholder="输入工人姓名">
-<button class="primary" onclick="addWorker()">＋ Add</button>
-</div>
-<div id="workers"></div>
-</div>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f3f4f6;
+  color:#111827
+}
 
-<div class="card">
-<div class="title">💵 Salary Advance / 预支薪水</div>
-<p class="muted">当天有预支薪水，就在对应工人输入金额；月尾结算会自动扣除。</p>
-<div id="advanceWorkers"></div>
-<label>Remarks</label>
-<textarea id="remarks" placeholder="现场备注 / 材料 / 问题 / RFI..."></textarea>
-</div>
+header{
+  background:#111827;
+  color:#fff;
+  padding:18px 16px 14px;
+  position:sticky;
+  top:0;
+  z-index:5
+}
 
-<div class="card">
-<div class="title">⏱️ OT</div>
-<p class="muted">如需要分别记录每个人的 OT，请在这里填写。</p>
-<div id="otWorkers"></div>
-<label>未分开记录时的总 OT Hours</label><input id="ot" type="number" min="0" step="0.5" value="0">
-</div>
+header h1{
+  margin:0;
+  font-size:21px
+}
 
+header small{
+  opacity:.75
+}
 
-<div class="card">
-<div class="title">💰 Daily Wage / 日薪</div>
-<p class="muted">每个工人可设置日薪和 OT 时薪，月尾自动汇总。</p>
-<div id="salaryWorkers"></div>
-</div>
+main{
+  max-width:700px;
+  margin:auto;
+  padding:14px 14px 90px
+}
 
-<div class="card">
-<div class="title">📅 Monthly Salary / 月尾结算</div>
-<div class="row">
-<div><label>Month</label><input id="salaryMonth" type="month"></div>
-<button class="primary" onclick="showMonthlySalary()">Calculate</button>
-</div>
-<div id="monthlySalary"></div>
-</div>
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:0 1px 5px #0001
+}
 
-<div class="card">
-<div class="title">📊 Today Summary</div>
-<div class="summary">
-<div class="stat"><b id="present">0</b>Present</div>
-<div class="stat"><b id="absent">0</b>Absent</div>
-<div class="stat"><b id="mc">0</b>MC</div>
-</div>
-<br>
-<button class="primary" style="width:100%" onclick="saveRecord()">💾 Save Daily Record</button>
-<button class="secondary" style="width:100%;margin-top:8px" onclick="printReport()">📄 Generate / Print Report</button>
-</div>
-</section>
-</main>
+.title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:8px
+}
 
-<div class="nav"><button onclick="window.scrollTo({top:0,behavior:'smooth'})">🏠 Daily Record</button></div>
+label{
+  display:block;
+  font-weight:700;
+  font-size:13px;
+  margin:10px 0 6px
+}
 
-<script>
-let workers=[];
-let photos=[];
-const today=new Date().toISOString().slice(0,10);
-document.getElementById('date').value=today;
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  border:1px solid #d1d5db;
+  border-radius:9px;
+  font-size:15px;
+  background:#fff
+}
 
-function addWorker(){
- const n=document.getElementById('newWorker').value.trim(); if(!n)return;
- workers.push({name:n,status:'Present',dailyRate:0,otRate:0});
- document.getElementById('newWorker').value=''; render();
+textarea{
+  min-height:90px;
+  resize:vertical
 }
-function setStatus(i,s){workers[i].status=s;render()}
-function removeWorker(i){workers.splice(i,1);render()}
-function render(){
- document.getElementById('workerCount').textContent='('+workers.length+')';
- workersEl=document.getElementById('workers');
- workersEl.innerHTML=workers.map((w,i)=>`
- <div class="worker">
-  <div class="worker-head"><span class="worker-name">${esc(w.name)}</span><button class="danger" onclick="removeWorker(${i})">删除</button></div>
-  <div class="pills">
-   ${['Present','Absent','MC','Leave','Half Day'].map(s=>`<button class="pill ${w.status===s?'active':''}" onclick="setStatus(${i},'${s}')">${s}</button>`).join('')}
-  </div>
- </div>`).join('');
- document.getElementById('present').textContent=workers.filter(x=>x.status==='Present'||x.status==='Half Day').length;
- document.getElementById('absent').textContent=workers.filter(x=>x.status==='Absent').length;
- document.getElementById('mc').textContent=workers.filter(x=>x.status==='MC').length;
- renderSalaryWorkers();
- renderOTWorkers();
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:11px 14px;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  touch-action:manipulation
 }
-function renderOTWorkers(){
- const box=document.getElementById('otWorkers');
- if(!box)return;
- box.innerHTML=workers.map((w,i)=>`
- <div class="row" style="margin:7px 0">
-  <div><b>${esc(w.name)}</b></div>
-  <div><input id="ot_${i}" type="number" min="0" step="0.5" value="0" placeholder="OT hours"></div>
- </div>`).join('');
+
+button:active{
+  transform:scale(.98)
 }
-function renderSalaryWorkers(){
- const box=document.getElementById('salaryWorkers');
- box.innerHTML=workers.map((w,i)=>`
- <div class="worker">
-  <div class="worker-name">${esc(w.name)}</div>
-  <div class="row">
-   <div><label>日薪 RM</label><input type="number" min="0" step="0.01" value="${w.dailyRate||0}" onchange="workers[${i}].dailyRate=Number(this.value)"></div>
-   <div><label>OT 时薪 RM</label><input type="number" min="0" step="0.01" value="${w.otRate||0}" onchange="workers[${i}].otRate=Number(this.value)"></div>
-  </div>
- </div>`).join('');
- renderAdvanceWorkers();
+
+.primary{
+  background:#2563eb;
+  color:#fff
 }
-function renderAdvanceWorkers(){
- const box=document.getElementById('advanceWorkers');
- if(!box)return;
- box.innerHTML=workers.length ? workers.map((w,i)=>`
- <div class="worker">
-  <div class="worker-name">${esc(w.name)}</div>
-  <label>今日预支薪水 RM</label>
-  <input id="advance_${i}" type="number" min="0" step="0.01" value="0" placeholder="0.00">
- </div>`).join('') : '<p class="muted">请先添加工人。</p>';
+
+.secondary{
+  background:#e5e7eb;
+  color:#111827
 }
-function showMonthlySalary(){
- const month=document.getElementById('salaryMonth').value;
- if(!month){alert('请选择月份');return}
- const records=[];
- for(let d=1;d<=31;d++){
-  const key=month+'-'+String(d).padStart(2,'0');
-  const raw=localStorage.getItem('siteDailyRecord_'+key);
-  if(raw){try{records.push(JSON.parse(raw))}catch(e){}}
- }
- const rows=workers.map(w=>{
-   let present=0, half=0, ot=0, advance=0;
-   records.forEach(r=>{
-     (r.workers||[]).forEach(x=>{
-       if(x.name===w.name){
-         if(x.status==='Present') present++;
-         if(x.status==='Half Day'){present+=0.5;half++}
-       }
-     });
-     ot+=Number(r.otByWorker?.[w.name]||0);
-     advance+=Number(r.advanceByWorker?.[w.name]||0);
-   });
-   const daily=Number(w.dailyRate||0), otr=Number(w.otRate||0);
-   const basic=present*daily, otpay=ot*otr, gross=basic+otpay, total=gross-advance;
-   return {name:w.name,present,ot,basic,otpay,advance,total};
- }).filter(x=>x.name);
- let total=0;
- const body=rows.map(x=>{total+=x.total;return `<tr><td>${esc(x.name)}</td><td>${x.present}</td><td>${x.ot}</td><td>RM ${x.basic.toFixed(2)}</td><td>RM ${x.otpay.toFixed(2)}</td><td>RM ${x.advance.toFixed(2)}</td><td><b>RM ${x.total.toFixed(2)}</b></td></tr>`}).join('');
- document.getElementById('monthlySalary').innerHTML=`
- <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px">
- <tr><th>工人</th><th>天数</th><th>OT</th><th>基本薪</th><th>OT薪</th><th>预支</th><th>应付</th></tr>${body}
- </table></div>
- <p><b>本月应付总薪资：RM ${total.toFixed(2)}</b></p>`;
+
+.danger{
+  background:#fee2e2;
+  color:#b91c1c
 }
-function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function saveRecord(){
- const otByWorker={}, advanceByWorker={};
-workers.forEach((w,i)=>{
- const el=document.getElementById('ot_'+i); if(el) otByWorker[w.name]=Number(el.value||0);
- const adv=document.getElementById('advance_'+i); if(adv) advanceByWorker[w.name]=Number(adv.value||0);
-});
-const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
-const data={project:projectEl.value,site:siteEl.value,date:dateEl.value,supervisor:supervisorEl.value,workers,remarks:remarksEl.value,ot:otEl.value,otByWorker,advanceByWorker};
- localStorage.setItem('siteDailyRecord_'+dateEl.value,JSON.stringify(data));
- alert('已保存今天的 Daily Record。');
+
+.row{
+  display:flex;
+  gap:8px;
+  align-items:center
 }
-function printReport(){
- const projectEl=document.getElementById('project'), siteEl=document.getElementById('site'), dateEl=document.getElementById('date'), supervisorEl=document.getElementById('supervisor'), remarksEl=document.getElementById('remarks'), otEl=document.getElementById('ot');
- const p=projectEl.value||'Site Daily Record';
- const rows=workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.status)}</td></tr>`).join('');
- const html=`<html><head><title>${esc(p)}</title><style>body{font-family:Arial;padding:25px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #aaa;padding:8px;text-align:left}h1{font-size:22px}.box{margin:10px 0}</style></head><body>
- <h1>Daily Site Record</h1><div class="box"><b>Project:</b> ${esc(p)}</div><div class="box"><b>Site:</b> ${esc(siteEl.value)}</div><div class="box"><b>Date:</b> ${esc(dateEl.value)}</div><div class="box"><b>Supervisor:</b> ${esc(supervisorEl.value)}</div>
- <h3>Attendance</h3><table><tr><th>Worker</th><th>Status</th></tr>${rows}</table>
-<h3>OT</h3><p>${esc(otEl.value)} hours</p><h3>Remarks</h3><p>${esc(remarksEl.value).replace(/\n/g,'<br>')}</p>
- <script>window.onload=()=>window.print()<\/script><script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+
+.row>*{
+  flex:1
 }
-</script>
-</body></html>`;
- const w=window.open(); w.document.write(html); w.document.close();
+
+.worker{
+  border:1px solid #e5e7eb;
+  border-radius:11px;
+  padding:12px;
+  margin:9px 0
 }
-render();
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+
+.worker-head{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center
 }
-</script>
-</body>
-</html>
+
+.worker-name{
+  font-weight:700
+}
+
+.pills{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:9px
+}
+
+.pill{
+  padding:8px 10px;
+  border-radius:999px;
+  background:#f3f4f6;
+  font-size:12px
+}
+
+.pill.active{
+  background:#2563eb;
+  color:#fff
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+
+.stat{
+  background:#f9fafb;
+  border-radius:10px;
+  padding:10px;
+  text-align:center
+}
+
+.stat b{
+  display:block;
+  font-size:20px
+}
+
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#fff;
+  border-top:1px solid #ddd;
+  display:flex;
+  z-index:10
+}
+
+.nav button{
+  border-radius:0;
+  background:#fff;
+  flex:1;
+  padding:14px
+}
+
+.muted{
+  color:#6b7280;
+  font-size:12px
+}
+
+.empty{
+  padding:10px 0;
+  color:#6b7280;
+  font-size:13px
+}
+
+table{
+  min-width:650px
+}
+
+th,td{
+  padding:7px;
+  border-bottom:

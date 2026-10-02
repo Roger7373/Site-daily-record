@@ -82,6 +82,24 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
     <label>结算月份<input type="month" id="summaryMonth" onchange="renderSummary()"></label>
   </div>
   <div id="summaryContent"></div>
+  <div class="card no-print">
+  <h2>📤 结算报告</h2>
+  <div class="small" style="margin-bottom:10px">
+    可打印、保存 PDF、复制或直接转发给 WhatsApp。
+  </div>
+
+  <button class="btn-primary" onclick="printSummary()">
+    🖨️ 打印 / 保存 PDF
+  </button>
+
+  <button class="btn-primary" onclick="copySummaryReport()">
+    📋 复制报告
+  </button>
+
+  <button class="btn-primary" onclick="shareSummaryReport()">
+    📤 转发报告
+  </button>
+</div>
   <div class="card danger-zone no-print"><h2>⚠️ 数据管理</h2>
     <p class="small">清除后，工人、日勤、预支薪水及工资修改资料都会被删除。</p>
     <button class="btn-red" onclick="clearAllData()">清除全部资料</button>
@@ -471,6 +489,76 @@ async function sharePersonalReport(){
   await copyPersonalReport();
 }
 function printPersonal(){window.print()}
+  function getSummaryReportText(){
+  const month=document.getElementById("summaryMonth").value||getMonth();
+  if(!workers.length)return "";
+
+  let text=`${month} 月尾结算报告\n\n`;
+  let totalNet=0,totalEarnings=0,totalAdvance=0,totalDebt=0;
+
+  workers.forEach(w=>{
+    const s=calculateSalary(w,month);
+
+    totalEarnings+=s.totalEarnings;
+    totalAdvance+=s.advance;
+    totalNet+=s.net;
+    totalDebt+=s.outstandingDebt;
+
+    text+=
+      `${w.name}\n`+
+      `出勤：${s.presentDays} 天\n`+
+      `OT：${s.otHours} 小时\n`+
+      `本月工资：RM ${money(s.totalEarnings)}\n`+
+      `上月欠款：RM ${money(s.previousDebt)}\n`+
+      `本月预支：RM ${money(s.advance)}\n`+
+      `应付：RM ${money(s.net)}\n`+
+      `尚欠：RM ${money(s.outstandingDebt)}\n\n`;
+  });
+
+  text+=
+    `========== 总结 ==========\n`+
+    `总工资：RM ${money(totalEarnings)}\n`+
+    `本月预支：RM ${money(totalAdvance)}\n`+
+    `实际应付：RM ${money(totalNet)}\n`+
+    `尚欠预支：RM ${money(totalDebt)}`;
+
+  return text;
+}
+
+async function copySummaryReport(){
+  const text=getSummaryReportText();
+  if(!text)return;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("结算报告已复制，可以粘贴到 WhatsApp。");
+  }catch(e){
+    prompt("复制下面的结算报告：",text);
+  }
+}
+
+async function shareSummaryReport(){
+  const text=getSummaryReportText();
+  if(!text)return;
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"月尾结算报告",
+        text:text
+      });
+      return;
+    }catch(e){
+      if(e.name==="AbortError")return;
+    }
+  }
+
+  await copySummaryReport();
+}
+
+function printSummary(){
+  window.print();
+}
 
 function clearAllData(){
   if(!confirm("确定要清除全部资料吗？\n\n工人、日勤、预支薪水及工资修改都会被删除。"))return;

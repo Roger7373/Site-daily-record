@@ -1,4 +1,4 @@
-const CACHE = "site-daily-record-v4";
+const CACHE = "site-daily-record-v5";
 
 const ASSETS = [
   "./",

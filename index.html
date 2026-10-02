@@ -222,7 +222,7 @@ function renderWorkers(){
 }
 
 function getAttendanceKey(date,id){return date+"_"+id}
-function getAttendance(id,date){return attendance[getAttendanceKey(date,id)]||{status:"present",ot:0}}
+function getAttendance(id,date){return attendance[getAttendanceKey(date,id)]||{status:"unrecorded",ot:0}}
 function setAttendance(id,date,status){
   const key=getAttendanceKey(date,id),old=attendance[key]||{};
   attendance[key]={status,ot:Number(old.ot||0)};saveData();renderAttendance();

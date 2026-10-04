@@ -32,37 +32,6 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 .att-present{background:#dcfce7;color:#166534}.att-off{background:#fef3c7;color:#92400e}.att-absent{background:#fee2e2;color:#991b1b}
 .att-selected{outline:3px solid #2563eb}.ot-box{margin-top:8px;display:flex;align-items:center;gap:8px}.ot-box input{width:90px;margin:0}
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f9fafb}
-.attendance-summary-mobile{
-  display:none;
-}
-
-@media(max-width:699px){
-  .attendance-summary-mobile{
-    display:block;
-  }
-
-  #attendanceSummaryPrintArea{
-    display:none;
-  }
-
-  .attendance-worker-card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:14px;
-    padding:14px;
-    margin-bottom:12px;
-  }
-}
-
-@media print{
-  .attendance-summary-mobile{
-    display:none!important;
-  }
-
-  #attendanceSummaryPrintArea{
-    display:block!important;
-  }
-}
 .total{font-size:20px;font-weight:bold}.empty{text-align:center;color:#6b7280;padding:25px 10px}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:65px;background:white;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:20;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .nav-btn{flex:1;max-width:180px;background:white;color:#6b7280;border-radius:0;padding:7px 2px;font-size:12px}.nav-btn.active{color:#2563eb;font-weight:bold}
@@ -557,19 +526,7 @@ function renderPersonalAttendance(){
 }else if(d.status!=="off"){
   unrecorded++;
 }
-mobileCards+=`
-      <div class="attendance-worker-card">
-        <strong>${escapeHTML(w.name)}</strong>
-        <div>
-          ✓ 出勤 ${present} 天　
-          ✕ 缺勤 ${absent} 天　
-          ? 未记录 ${unrecorded} 天
-        </div>
-        <div>${dayCells}</div>
-      </div>
-    `;
-      });
-    
+});
    let head="<tr><th>工人</th>";
   for(let day=1;day<=totalDays;day++){
     head+=`<th>${day}</th>`;
@@ -621,10 +578,6 @@ mobileCards+=`
   });
 
   box.innerHTML=`
-  <div class="attendance-summary-mobile">
-  ${mobileCards}
-</div>
-
     <div class="card print-area" id="attendanceSummaryPrintArea">
       <div class="report-title">
         <h2>${month} 员工总体出勤表</h2>

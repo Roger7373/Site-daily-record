@@ -117,6 +117,41 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
   </div>
   <div id="personalReport"></div>
 </section>
+  <section id="page-attendance-summary" class="page">
+  <div class="card">
+    <h2>👥 总出勤</h2>
+
+    <div class="month-row">
+      <label>月份
+        <input type="month" id="attendanceSummaryMonth" onchange="renderAttendanceSummary()">
+      </label>
+    </div>
+
+    <div class="small">
+      ✓ 出勤　✕ 缺勤　休 休息　? 未记录
+    </div>
+  </div>
+
+  <div id="attendanceSummaryContent"></div>
+
+  <div class="card no-print">
+    <h2>📤 出勤表</h2>
+
+    <div class="report-actions">
+      <button class="btn-primary" onclick="printAttendanceSummary()">
+        🖨️ 打印 / 保存 PDF
+      </button>
+
+      <button class="btn-green" onclick="copyAttendanceSummary()">
+        📋 复制出勤表
+      </button>
+
+      <button class="btn-purple" onclick="shareAttendanceSummary()">
+        📤 转发出勤表
+      </button>
+    </div>
+  </div>
+</section>
 </div>
 
 <div class="bottom-nav">

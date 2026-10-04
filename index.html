@@ -31,7 +31,32 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 .att-buttons{display:flex;gap:6px;flex-wrap:wrap}.att-btn{padding:7px 10px;font-size:13px}
 .att-present{background:#dcfce7;color:#166534}.att-off{background:#fef3c7;color:#92400e}.att-absent{background:#fee2e2;color:#991b1b}
 .att-selected{outline:3px solid #2563eb}.ot-box{margin-top:8px;display:flex;align-items:center;gap:8px}.ot-box input{width:90px;margin:0}
-.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f9fafb}
+.attendance-summary-mobile{display:none}
+.attendance-worker-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.attendance-worker-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.attendance-worker-avatar{width:42px;height:42px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;flex-shrink:0}
+.attendance-worker-name{font-size:17px}
+.attendance-worker-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}
+.attendance-stat-present{background:#d1fae5;color:#047857;padding:5px 8px;border-radius:8px;font-weight:bold}
+.attendance-stat-absent{background:#fee2e2;color:#b91c1c;padding:5px 8px;border-radius:8px;font-weight:bold}
+.attendance-stat-unrecorded{background:#f3f4f6;color:#6b7280;padding:5px 8px;border-radius:8px;font-weight:bold}
+.attendance-days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px 5px}
+.attendance-day{text-align:center}
+.attendance-day-number{font-size:10px;color:#6b7280;margin-bottom:3px}
+.attendance-day-circle{width:29px;height:29px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold}
+.attendance-day-present{background:#10b981;color:#fff}
+.attendance-day-absent{background:#ef4444;color:#fff}
+.attendance-day-unrecorded{background:#e5e7eb;color:#6b7280}
+.attendance-day-off{background:transparent;color:transparent}
+@media(max-width:699px){
+  .attendance-summary-desktop{display:none}
+  .attendance-summary-mobile{display:block}
+}
+@media print{
+  .attendance-summary-mobile{display:none!important}
+  .attendance-summary-desktop{display:block!important}
+}
+  .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f9fafb}
 .total{font-size:20px;font-weight:bold}.empty{text-align:center;color:#6b7280;padding:25px 10px}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:65px;background:white;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:20;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .nav-btn{flex:1;max-width:180px;background:white;color:#6b7280;border-radius:0;padding:7px 2px;font-size:12px}.nav-btn.active{color:#2563eb;font-weight:bold}
@@ -128,7 +153,7 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
     </div>
 
     <div class="small">
-      ✓ 出勤　✕ 缺勤　休 休息　? 未记录
+      ✓ 出勤　✕ 缺勤　? 未记录
     </div>
   </div>
 
@@ -499,7 +524,7 @@ function renderPersonalAttendance(){
     <button class="btn-purple" onclick="sharePersonalReport()">📤 分享报告</button>
   </div></div>`;
 }
-  function renderAttendanceSummary(){
+function renderAttendanceSummary(){
   const box=document.getElementById("attendanceSummaryContent");
   const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
 
@@ -509,75 +534,86 @@ function renderPersonalAttendance(){
   }
 
   const totalDays=daysInMonth(month);
-   let head="<tr><th>工人</th>";
-  for(let day=1;day<=totalDays;day++){
-    head+=`<th>${day}</th>`;
-  }
-  head+="<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
 
-  let rows="";
+  let mobileCards="";
 
   workers.forEach(w=>{
-    let present=0,absent=0,off=0,unrecorded=0;
-    let cells="";
+    let present=0;
+    let absent=0;
+    let unrecorded=0;
+    let dayCells="";
 
     for(let day=1;day<=totalDays;day++){
       const date=month+"-"+String(day).padStart(2,"0");
       const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
 
       let status="?";
-      let cls="summary-unrecorded";
+      let cls="attendance-day-unrecorded";
 
       if(d.status==="present"){
         status="✓";
-        cls="summary-present";
+        cls="attendance-day-present";
         present++;
       }else if(d.status==="absent"){
         status="✕";
-        cls="summary-absent";
+        cls="attendance-day-absent";
         absent++;
       }else if(d.status==="off"){
-        status="休";
-        cls="summary-off";
-        off++;
+        status="";
+        cls="attendance-day-off";
       }else{
         unrecorded++;
       }
 
-      cells+=`<td class="${cls}">${status}</td>`;
+      dayCells+=`
+        <div class="attendance-day">
+          <div class="attendance-day-number">${day}</div>
+          <div class="attendance-day-circle ${cls}">${status}</div>
+        </div>
+      `;
     }
 
-    rows+=`
-      <tr>
-        <td><strong>${escapeHTML(w.name)}</strong></td>
-        ${cells}
-        <td><strong>${present}</strong></td>
-        <td>${absent}</td>
-        <td>${off}</td>
-        <td>${unrecorded}</td>
-      </tr>
+    mobileCards+=`
+      <div class="attendance-worker-card">
+        <div class="attendance-worker-header">
+          <div class="attendance-worker-avatar">
+            ${escapeHTML((w.name||"?").charAt(0))}
+          </div>
+
+          <div class="attendance-worker-name">
+            <strong>${escapeHTML(w.name)}</strong>
+          </div>
+        </div>
+
+        <div class="attendance-worker-stats">
+          <span class="attendance-stat-present">✓ 出勤 ${present} 天</span>
+          <span class="attendance-stat-absent">✕ 缺勤 ${absent} 天</span>
+          <span class="attendance-stat-unrecorded">? 未记录 ${unrecorded} 天</span>
+        </div>
+
+        <div class="attendance-days-grid">
+          ${dayCells}
+        </div>
+      </div>
     `;
   });
 
-  box.innerHTML=`
-    <div class="card print-area" id="attendanceSummaryPrintArea">
-      <div class="report-title">
-        <h2>${month} 员工总体出勤表</h2>
-      </div>
+  let head="<tr><th>工人</th>";
 
-      <div class="table-wrap">
-        <table class="attendance-summary-table">
-          <thead>
-            ${head}
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-} 
+  for(let day=1;day<=totalDays;day++){
+    head+=`<th>${day}</th>`;
+  }
+
+  head+="<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
+
+  let rows="";
+
+  workers.forEach(w=>{
+    let present=0;
+    let absent=0;
+    let off=0;
+    let unrecorded=0;
+    let cells="";
 
 
   function getAttendanceSummaryText(){

@@ -124,7 +124,8 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 <button class="nav-btn" id="nav-attendance" onclick="showPage('attendance')"><span class="nav-icon">📅</span>日勤</button>
 <button class="nav-btn" id="nav-salary" onclick="showPage('salary')"><span class="nav-icon">💰</span>薪资</button>
 <button class="nav-btn" id="nav-summary" onclick="showPage('summary')"><span class="nav-icon">📊</span>结算</button>
-<button class="nav-btn" id="nav-personal" onclick="showPage('personal')"><span class="nav-icon">👤</span>个人</button>
+<button class="nav-btn" id="nav-attendance-summary" onclick="showPage('attendance-summary')"><span class="nav-icon">👥</span>总出勤</button>
+  <button class="nav-btn" id="nav-personal" onclick="showPage('personal')"><span class="nav-icon">👤</span>个人</button>
 </div>
 
 <div class="modal" id="workerModal"><div class="modal-box">
@@ -172,6 +173,7 @@ function showPage(page){
   if(page==="attendance")renderAttendance();
   if(page==="salary")renderSalary();
   if(page==="summary")renderSummary();
+  if(page==="attendance-summary")renderAttendanceSummary();
   if(page==="personal"){renderPersonalWorkerOptions();renderPersonalAttendance();}
 }
 
@@ -462,6 +464,201 @@ function renderPersonalAttendance(){
     <button class="btn-purple" onclick="sharePersonalReport()">📤 分享报告</button>
   </div></div>`;
 }
+  function renderAttendanceSummary(){
+  const box=document.getElementById("attendanceSummaryContent");
+  const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
+
+  if(!workers.length){
+    box.innerHTML='<div class="card empty">还没有工人</div>';
+    return;
+  }
+
+  const totalDays=daysInMonth(month);
+   let head="<tr><th>工人</th>";
+  for(let day=1;day<=totalDays;day++){
+    head+=`<th>${day}</th>`;
+  }
+  head+="<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
+
+  let rows="";
+
+  workers.forEach(w=>{
+    let present=0,absent=0,off=0,unrecorded=0;
+    let cells="";
+
+    for(let day=1;day<=totalDays;day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+
+      let status="?";
+      let cls="summary-unrecorded";
+
+      if(d.status==="present"){
+        status="✓";
+        cls="summary-present";
+        present++;
+      }else if(d.status==="absent"){
+        status="✕";
+        cls="summary-absent";
+        absent++;
+      }else if(d.status==="off"){
+        status="休";
+        cls="summary-off";
+        off++;
+      }else{
+        unrecorded++;
+      }
+
+      cells+=`<td class="${cls}">${status}</td>`;
+    }
+
+    rows+=`
+      <tr>
+        <td><strong>${escapeHTML(w.name)}</strong></td>
+        ${cells}
+        <td><strong>${present}</strong></td>
+        <td>${absent}</td>
+        <td>${off}</td>
+        <td>${unrecorded}</td>
+      </tr>
+    `;
+  });
+
+  box.innerHTML=`
+    <div class="card print-area" id="attendanceSummaryPrintArea">
+      <div class="report-title">
+        <h2>${month} 员工总体出勤表</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table class="attendance-summary-table">
+          <thead>
+            ${head}
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+} 
+
+  let html='<div class="card"><div class="table-wrap"><table class="attendance-summary-table" style="min-width:1200px">';
+  html+='<thead><tr><th>工人</th>';
+
+  for(let day=1;day<=totalDays;day++){
+    html+=`<th>${day}</th>`;
+  }
+
+  html+='<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr></thead><tbody>';
+
+  workers.forEach(w=>{
+    let present=0,absent=0,off=0,unrecorded=0;
+
+    html+=`<tr><td><strong>${escapeHTML(w.name)}</strong></td>`;
+
+    for(let day=1;day<=totalDays;day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+
+      let status="?",cls="daily-unrecorded";
+
+      if(d.status==="present"){
+        status="✓";
+        cls="daily-present";
+        present++;
+      }else if(d.status==="absent"){
+        status="✕";
+        cls="daily-absent";
+        absent++;
+      }else if(d.status==="off"){
+        status="休";
+        cls="daily-off";
+        off++;
+      }else{
+        unrecorded++;
+      }
+
+      html+=`<td class="${cls}" style="text-align:center;font-weight:bold">${status}</td>`;
+    }
+
+    html+=`<td style="text-align:center;font-weight:bold">${present}</td>`;
+    html+=`<td style="text-align:center;font-weight:bold">${absent}</td>`;
+    html+=`<td style="text-align:center;font-weight:bold">${off}</td>`;
+    html+=`<td style="text-align:center;font-weight:bold">${unrecorded}</td>`;
+    html+='</tr>';
+  });
+
+  html+='</tbody></table></div></div>';
+
+  box.innerHTML=html;
+}
+  function getAttendanceSummaryText(){
+  const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
+  let text=`${month} 员工总体出勤表\n\n`;
+
+  workers.forEach(w=>{
+    let present=0,absent=0,off=0,unrecorded=0;
+    let daysText="";
+
+    for(let day=1;day<=daysInMonth(month);day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+
+      let status="?";
+
+      if(d.status==="present"){
+        status="✓";
+        present++;
+      }else if(d.status==="absent"){
+        status="✕";
+        absent++;
+      }else if(d.status==="off"){
+        status="休";
+        off++;
+      }else{
+        unrecorded++;
+      }
+
+      daysText+=`${String(day).padStart(2,"0")}${status} `;
+    }
+
+    text+=`${w.name}\n`;
+    text+=`${daysText}\n`;
+    text+=`出勤 ${present} 天｜缺勤 ${absent} 天｜休息 ${off} 天｜未记录 ${unrecorded} 天\n\n`;
+  });
+
+  return text.trim();
+}
+
+async function copyAttendanceSummary(){
+  try{
+    await navigator.clipboard.writeText(getAttendanceSummaryText());
+    alert("出勤表已经复制");
+  }catch(e){
+    alert("复制失败，请手动复制");
+  }
+}
+
+async function shareAttendanceSummary(){
+  const text=getAttendanceSummaryText();
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"员工总体出勤表",
+        text:text
+      });
+    }catch(e){}
+  }else{
+    await copyAttendanceSummary();
+  }
+}
+
+function printAttendanceSummary(){
+  window.print();
+}
 function getPersonalReportText(){
   const month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value,w=workers.find(x=>x.id===workerId);if(!w)return "";
   let text=`${w.name} - ${month} 个人日勤表\nDaily RM ${money(w.dailyRate)} | OT RM ${money(w.otRate)}/小时\n\n`;
@@ -571,6 +768,7 @@ function init(){
   document.getElementById("attendanceDate").value=getToday();
   document.getElementById("salaryMonth").value=getMonth();
   document.getElementById("summaryMonth").value=getMonth();
+  document.getElementById("attendanceSummaryMonth").value=getMonth();
   document.getElementById("personalMonth").value=getMonth();
   renderWorkers();renderPersonalWorkerOptions();
 }

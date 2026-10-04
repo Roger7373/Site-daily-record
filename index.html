@@ -510,6 +510,12 @@ function renderPersonalAttendance(){
 
   const totalDays=daysInMonth(month);
     let mobileCards="";
+
+    workers.forEach(w=>{
+  let present=0;
+  let absent=0;
+  let unrecorded=0;
+});
    let head="<tr><th>工人</th>";
   for(let day=1;day<=totalDays;day++){
     head+=`<th>${day}</th>`;

@@ -544,56 +544,7 @@ function renderPersonalAttendance(){
   `;
 } 
 
-  let html='<div class="card"><div class="table-wrap"><table class="attendance-summary-table" style="min-width:1200px">';
-  html+='<thead><tr><th>工人</th>';
 
-  for(let day=1;day<=totalDays;day++){
-    html+=`<th>${day}</th>`;
-  }
-
-  html+='<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr></thead><tbody>';
-
-  workers.forEach(w=>{
-    let present=0,absent=0,off=0,unrecorded=0;
-
-    html+=`<tr><td><strong>${escapeHTML(w.name)}</strong></td>`;
-
-    for(let day=1;day<=totalDays;day++){
-      const date=month+"-"+String(day).padStart(2,"0");
-      const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
-
-      let status="?",cls="daily-unrecorded";
-
-      if(d.status==="present"){
-        status="✓";
-        cls="daily-present";
-        present++;
-      }else if(d.status==="absent"){
-        status="✕";
-        cls="daily-absent";
-        absent++;
-      }else if(d.status==="off"){
-        status="休";
-        cls="daily-off";
-        off++;
-      }else{
-        unrecorded++;
-      }
-
-      html+=`<td class="${cls}" style="text-align:center;font-weight:bold">${status}</td>`;
-    }
-
-    html+=`<td style="text-align:center;font-weight:bold">${present}</td>`;
-    html+=`<td style="text-align:center;font-weight:bold">${absent}</td>`;
-    html+=`<td style="text-align:center;font-weight:bold">${off}</td>`;
-    html+=`<td style="text-align:center;font-weight:bold">${unrecorded}</td>`;
-    html+='</tr>';
-  });
-
-  html+='</tbody></table></div></div>';
-
-  box.innerHTML=html;
-}
   function getAttendanceSummaryText(){
   const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
   let text=`${month} 员工总体出勤表\n\n`;

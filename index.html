@@ -526,15 +526,6 @@ function renderPersonalAttendance(){
 }else if(d.status!=="off"){
   unrecorded++;
 }
-        let status="?";
-
-if(d.status==="present"){
-  status="✓";
-}else if(d.status==="absent"){
-  status="✕";
-}else if(d.status==="off"){
-  status="";
-}
 });
    let head="<tr><th>工人</th>";
   for(let day=1;day<=totalDays;day++){

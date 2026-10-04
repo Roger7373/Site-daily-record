@@ -593,6 +593,7 @@ function renderPersonalAttendance(){
 
   workers.forEach(w=>{
     let present=0,absent=0,off=0,unrecorded=0;
+    let dayCells="";
     let daysText="";
 
     for(let day=1;day<=daysInMonth(month);day++){

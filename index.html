@@ -509,6 +509,7 @@ function renderPersonalAttendance(){
   }
 
   const totalDays=daysInMonth(month);
+    let mobileCards="";
    let head="<tr><th>工人</th>";
   for(let day=1;day<=totalDays;day++){
     head+=`<th>${day}</th>`;

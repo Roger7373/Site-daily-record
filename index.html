@@ -519,6 +519,12 @@ function renderPersonalAttendance(){
       for(let day=1;day<=totalDays;day++){
   const date=month+"-"+String(day).padStart(2,"0");
   const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+        if(d.status==="present"){
+  present++;
+}else if(d.status==="absent"){
+  absent++;
+}else if(d.status!=="off"){
+  unrecorded++;
 }
 });
    let head="<tr><th>工人</th>";

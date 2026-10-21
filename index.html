@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111827">
 <meta name="description" content="工地工人日勤、OT、预支薪水和月尾薪资">
 <link rel="manifest" href="/Site-daily-record/manifest.json">
-<title>Site Daily Record V5.1</title>
+<title>Site Daily Record V5.2</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827;padding-bottom:75px}
@@ -29,7 +29,7 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 .worker-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
 .att-row{border-bottom:1px solid #e5e7eb;padding:12px 0}.att-name{font-weight:bold;margin-bottom:8px}
 .att-buttons{display:flex;gap:6px;flex-wrap:wrap}.att-btn{padding:7px 10px;font-size:13px}
-.att-present{background:#dcfce7;color:#166534}.att-off{background:#fef3c7;color:#92400e}.att-absent{background:#fee2e2;color:#991b1b}
+.att-present{background:#dcfce7;color:#166534}.att-half{background:#fef08a;color:#713f12}.att-off{background:#fef3c7;color:#92400e}.att-absent{background:#fee2e2;color:#991b1b}
 .att-selected{outline:3px solid #2563eb}.ot-box{margin-top:8px;display:flex;align-items:center;gap:8px}.ot-box input{width:90px;margin:0}
 /* 总出勤：电脑默认显示完整表格 */
 .attendance-summary-mobile{
@@ -96,11 +96,17 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
     color:#073642;
   }
 
+  .mobile-day-half{
+    background:#f5ce55;
+    color:#5b4300;
+  }
+
   .mobile-day-absent{
     background:#ef4444;
     color:#ffffff;
   }
 
+  .mobile-day-off{background:#ffffff;color:#64748b;border:1px solid #e5e7eb}
   .mobile-day-unrecorded{
     background:#f3f4f6;
     color:#6b7280;
@@ -128,11 +134,16 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 .small{font-size:12px;color:#6b7280}.amount{font-weight:bold}.danger-zone{border:1px solid #fecaca;background:#fff7f7}
 .report-title{text-align:center;margin-bottom:12px}.report-meta{text-align:center;color:#6b7280;font-size:13px;margin-bottom:15px}
 .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-.daily-present{color:#166534;font-weight:bold}.daily-off{color:#92400e}.daily-absent{color:#991b1b}.daily-unrecorded{color:#6b7280;font-weight:bold}
+.daily-present{color:#166534;font-weight:bold}.daily-half{color:#765300;font-weight:bold}.daily-off{color:#92400e}.daily-absent{color:#991b1b}.daily-unrecorded{color:#6b7280;font-weight:bold}
 /* V5.0 总出勤：出勤整格青色，缺勤整格红色（屏幕及打印）。 */
 .attendance-summary-table td.daily-present{background:#06b6d4!important;color:#073642!important}
 .attendance-summary-table td.daily-absent{background:#ef4444!important;color:#ffffff!important}
-.attendance-summary-table td.daily-present,.attendance-summary-table td.daily-absent{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.attendance-summary-table td.daily-half{background:#f5ce55!important;color:#5b4300!important}
+.personal-attendance-table td.daily-present{background:#06b6d4!important;color:#073642!important}
+.personal-attendance-table td.daily-half{background:#f5ce55!important;color:#5b4300!important}
+.personal-attendance-table td.daily-absent{background:#ef4444!important;color:#ffffff!important}
+.personal-attendance-table td.daily-unrecorded{background:#e5e7eb!important;color:#374151!important}
+.attendance-summary-table td.daily-present,.attendance-summary-table td.daily-absent,.attendance-summary-table td.daily-half,.personal-attendance-table td.daily-present,.personal-attendance-table td.daily-half,.personal-attendance-table td.daily-absent,.personal-attendance-table td.daily-unrecorded{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 @media print{
   body{background:white;padding:0}.no-print,header,.bottom-nav{display:none!important}.print-area{display:block!important}
   .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}.container{max-width:none;padding:0}
@@ -173,9 +184,9 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 </style>
 </head>
 <body>
-<header><h1>🏗️ Site Daily Record <span style="font-size:12px;color:#cbd5e1">V5.1</span></h1><p>工人日勤 · OT · 预支薪水 · 月尾结算</p></header>
+<header><h1>🏗️ Site Daily Record <span style="font-size:12px;color:#cbd5e1">V5.2</span></h1><p>工人日勤 · OT · 预支薪水 · 月尾结算</p></header>
 
-<div id="appModeIndicator">🧪 V5.1 测试模式：资料与正式 App 分开储存，修改不会影响旧 App。</div>
+<div id="appModeIndicator">🧪 V5.2 测试模式：资料与正式 App 分开储存，修改不会影响旧 App。</div>
 <div class="container">
 <section id="page-workers" class="page active">
   <div class="card no-print">
@@ -205,7 +216,7 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
     </div>
     <div id="attendanceDayStats" class="v5-stat-line"></div>
     <div class="v5-toolbar" style="margin-top:8px"><button class="btn-primary" onclick="fillMissingPresent()">✓ 只补记未记录为出勤</button></div>
-    <div class="v5-muted">已有出勤、休息和缺勤记录不会被批量覆盖。OT 依然可逐人填写。</div>
+    <div class="v5-muted">出勤 = 1 天，半天 = 0.5 天（50% 日薪），缺勤 = 0 天。批量补记不会覆盖原有记录；旧的「休息」历史记录会保留。OT 独立计算。</div>
   </div>
   <div class="card" id="siteManagement"><h2>🏗️ 工地管理</h2>
     <div class="v5-toolbar"><input id="newSiteName" placeholder="输入工地名称，例如 Site A" maxlength="70"><button class="btn-gray" onclick="addSite()">＋ 添加工地</button></div>
@@ -275,7 +286,7 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
     </div>
 
     <div class="small">
-      ✓ 出勤　✕ 缺勤　? 未记录
+      青色 出勤　黄色 半天　红色 缺勤　灰色 未记录（旧休息记录保留）
     </div>
   </div>
 
@@ -335,12 +346,12 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 <script>
 // Production retains all original V4 keys. The independent test file uses isolated keys.
 const TEST_MODE=document.documentElement.dataset.testMode==='true';
-const WORKER_KEY=TEST_MODE?'siteWorkersV5Test':'siteWorkers';
-const ATT_KEY=TEST_MODE?'siteAttendanceV5Test':'siteAttendance';
-const ADVANCE_KEY=TEST_MODE?'siteAdvancesV5Test':'siteAdvances';
-const SALARY_KEY=TEST_MODE?'siteSalaryOverridesV5Test':'siteSalaryOverrides';
-const SITE_KEY=TEST_MODE?'siteSitesV5Test':'siteDailySitesV5';
-const RECOVERY_KEY=TEST_MODE?'siteV5TestRestorePoint':'siteV5PreRestorePoint';
+const WORKER_KEY=TEST_MODE?'siteWorkersV52Test':'siteWorkers';
+const ATT_KEY=TEST_MODE?'siteAttendanceV52Test':'siteAttendance';
+const ADVANCE_KEY=TEST_MODE?'siteAdvancesV52Test':'siteAdvances';
+const SALARY_KEY=TEST_MODE?'siteSalaryOverridesV52Test':'siteSalaryOverrides';
+const SITE_KEY=TEST_MODE?'siteSitesV52Test':'siteDailySitesV5';
+const RECOVERY_KEY=TEST_MODE?'siteV52TestRestorePoint':'siteV5PreRestorePoint';
 const storeKeys=[WORKER_KEY,ATT_KEY,ADVANCE_KEY,SALARY_KEY,SITE_KEY];
 const storageReadErrors=[];
 function readLocal(key,fallback){try{const v=localStorage.getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){storageReadErrors.push(key);console.error('读取资料失败',key,e);return fallback}}
@@ -511,6 +522,7 @@ function getSiteBreakdown(month,workerId){
     const d=attendance[key]||{},sid=(d.siteId&&sites.some(s=>s.id===d.siteId))?d.siteId:'';
     const row=result.get(sid)||{siteId:sid,days:0,hours:0,amount:0};
     if(d.status==='present'){row.days++;row.amount+=Number(w.dailyRate)}
+    else if(d.status==='half'){row.days+=0.5;row.amount+=Number(w.dailyRate)*0.5}
     const hours=Number(d.ot||0);row.hours+=hours;row.amount+=hours*Number(w.otRate);
     result.set(sid,row);
   });
@@ -519,9 +531,9 @@ function getSiteBreakdown(month,workerId){
 function renderAttendance(){
   const date=document.getElementById("attendanceDate").value||getToday(),box=document.getElementById("attendanceList");
   renderSiteManager();
-  const counters={present:0,absent:0,off:0,unrecorded:0};
+  const counters={present:0,half:0,absent:0,off:0,unrecorded:0};
   workers.forEach(w=>{const st=getAttendance(w.id,date).status;counters[st]===undefined?counters.unrecorded++:counters[st]++});
-  document.getElementById('attendanceDayStats').textContent='出勤 '+counters.present+' · 缺勤 '+counters.absent+' · 休息 '+counters.off+' · 未记录 '+counters.unrecorded+' · 总人数 '+workers.length;
+  document.getElementById('attendanceDayStats').textContent='出勤 '+counters.present+' · 半天 '+counters.half+' · 缺勤 '+counters.absent+' · 历史休息 '+counters.off+' · 未记录 '+counters.unrecorded+' · 总人数 '+workers.length;
   if(!workers.length){box.innerHTML='<div class="empty">请先到「工人」添加工人</div>';return}
   box.innerHTML=workers.map(w=>{
     const d=getAttendance(w.id,date);
@@ -530,23 +542,25 @@ function renderAttendance(){
       <div class="att-name">${escapeHTML(w.name)}</div>
       <div class="att-buttons">
         <button class="att-btn att-present ${d.status==="present"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','present')">✓ 出勤</button>
-        <button class="att-btn att-off ${d.status==="off"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','off')">休息</button>
+        <button class="att-btn att-half ${d.status==="half"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','half')">½ 半天</button>
         <button class="att-btn att-absent ${d.status==="absent"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','absent')">缺勤</button>
       </div>
+      ${d.status==="off"?'<div class="v5-muted">历史记录：休息（已保留，如需更改请手动选择新状态）</div>':''}
       <div class="ot-box"><span>OT 小时：</span><input type="number" min="0" step="0.5" value="${Number(d.ot||0)}" onchange="setOT('${w.id}','${date}',this.value)"></div>
       <div style="margin-top:9px"><label style="margin:0 0 4px;font-weight:normal;color:#64748b">所属工地</label>${select}</div>
     </div>`}).join("");
 }
 
 function getMonthData(workerId,month){
-  let presentDays=0,otHours=0;
+  let fullDays=0,halfDays=0,otHours=0;
   Object.keys(attendance).forEach(key=>{
     if(!key.startsWith(month+"-")||!key.endsWith("_"+workerId))return;
     const d=attendance[key];
-    if(d.status==="present")presentDays++;
+    if(d.status==="present")fullDays++;
+    else if(d.status==="half")halfDays++;
     otHours+=Number(d.ot||0);
   });
-  return {presentDays,otHours};
+  return {presentDays:fullDays+halfDays*0.5,fullDays,halfDays,otHours};
 }
 function getAdvance(workerId,month){
   return advances.filter(a=>a.workerId===workerId&&a.date&&a.date.startsWith(month)).reduce((s,a)=>s+Number(a.amount||0),0);
@@ -589,7 +603,7 @@ function calculateSalary(worker,month){
   const netCents=Math.max(0,totalEarningsCents-totalDeductionCents);
   const outstandingDebtCents=Math.max(0,totalDeductionCents-totalEarningsCents);
   return {
-    presentDays:d.presentDays,otHours:d.otHours,basePay:basePayCents/100,otPay:otPayCents/100,
+    presentDays:d.presentDays,fullDays:d.fullDays,halfDays:d.halfDays,otHours:d.otHours,basePay:basePayCents/100,otPay:otPayCents/100,
     advance:currentAdvanceCents/100,previousDebt:previousDebtCents/100,
     calculatedEarnings:calculatedEarningsCents/100,totalEarnings:totalEarningsCents/100,
     net:netCents/100,outstandingDebt:outstandingDebtCents/100,
@@ -689,7 +703,7 @@ function renderSalary(){
     return `<div class="card">
       <h2>${escapeHTML(w.name)}</h2>
       <div class="grid">
-        <div class="stat"><div class="stat-title">出勤天数</div><div class="stat-value">${s.presentDays}</div></div>
+        <div class="stat"><div class="stat-title">折算出勤天数</div><div class="stat-value">${s.presentDays}</div><div class="v5-muted">全天 ${s.fullDays} · 半天 ${s.halfDays}</div></div>
         <div class="stat"><div class="stat-title">OT 小时</div><div class="stat-value">${s.otHours}</div></div>
         <div class="stat"><div class="stat-title">基本工资</div><div class="stat-value">RM ${money(s.basePay)}</div></div>
         <div class="stat"><div class="stat-title">OT 工资</div><div class="stat-value">RM ${money(s.otPay)}</div></div>
@@ -758,15 +772,16 @@ function renderPersonalAttendance(){
   const box=document.getElementById("personalReport"),month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value;
   if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
   const w=workers.find(x=>x.id===workerId);if(!w)return;
-  let present=0,off=0,absent=0,ot=0,base=0,otPay=0,rows="";
+  let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0,rows="";
   for(let day=1;day<=daysInMonth(month);day++){
     const date=month+"-"+String(day).padStart(2,"0"),d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
     if(d.status==="present"){present++;base+=Number(w.dailyRate)}
+    else if(d.status==="half"){half++;base+=Number(w.dailyRate)*0.5}
     else if(d.status==="off")off++;else if(d.status==="absent")absent++;
     ot+=Number(d.ot||0);otPay+=Number(d.ot||0)*Number(w.otRate);
-    const status=d.status==="present"?"出勤":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
-    const cls=d.status==="present"?"daily-present":d.status==="off"?"daily-off":d.status==="absent"?"daily-absent":"daily-unrecorded";
-    const dayPay=(d.status==="present"?Number(w.dailyRate):0)+(Number(d.ot||0)*Number(w.otRate));
+    const status=d.status==="present"?"出勤":d.status==="half"?"半天":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
+    const cls=d.status==="present"?"daily-present":d.status==="half"?"daily-half":d.status==="off"?"daily-off":d.status==="absent"?"daily-absent":"daily-unrecorded";
+    const dayPay=(d.status==="present"?Number(w.dailyRate):d.status==="half"?Number(w.dailyRate)*0.5:0)+(Number(d.ot||0)*Number(w.otRate));
     rows+=`<tr><td>${date}</td><td class="${cls}">${status}</td><td>${Number(d.ot||0)}</td><td>RM ${money(dayPay)}</td></tr>`;
   }
   const calculated=base+otPay,key=w.id+"_"+month,finalSalary=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
@@ -774,13 +789,15 @@ function renderPersonalAttendance(){
     <div class="report-title"><h2>${escapeHTML(w.name)} — ${month} 个人日勤表</h2><div class="report-meta">Daily RM ${money(w.dailyRate)} · OT RM ${money(w.otRate)}/小时</div></div>
     <div class="grid">
       <div class="stat"><div class="stat-title">出勤</div><div class="stat-value">${present} 天</div></div>
+      <div class="stat"><div class="stat-title">半天</div><div class="stat-value">${half} 天</div></div>
       <div class="stat"><div class="stat-title">休息</div><div class="stat-value">${off} 天</div></div>
       <div class="stat"><div class="stat-title">缺勤</div><div class="stat-value">${absent} 天</div></div>
       <div class="stat"><div class="stat-title">OT</div><div class="stat-value">${ot} 小时</div></div>
     </div>
-    <div class="table-wrap" style="margin-top:15px"><table><thead><tr><th>日期</th><th>日勤</th><th>OT小时</th><th>当天工资</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="table-wrap" style="margin-top:15px"><table class="personal-attendance-table"><thead><tr><th>日期</th><th>日勤</th><th>OT小时</th><th>当天工资</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div style="margin-top:15px;padding:12px;background:#f9fafb;border-radius:10px">
-      <div>基本工资：<b>RM ${money(base)}</b></div><div style="margin-top:6px">OT 工资：<b>RM ${money(otPay)}</b></div>
+      <div>折算出勤：<b>${present+half*0.5} 天</b>（全天 ${present} · 半天 ${half}）</div>
+      <div style="margin-top:6px">基本工资：<b>RM ${money(base)}</b></div><div style="margin-top:6px">OT 工资：<b>RM ${money(otPay)}</b></div>
       <div style="margin-top:6px">计算工资：<b>RM ${money(calculated)}</b></div>
       <div style="margin-top:6px">最终本月工资：<b>RM ${money(finalSalary)}</b></div>
     </div>
@@ -808,6 +825,7 @@ function renderPersonalAttendance(){
 
   workers.forEach(w=>{
     let present=0;
+    let half=0;
     let absent=0;
     let unrecorded=0;
     let dayCells="";
@@ -826,6 +844,10 @@ function renderPersonalAttendance(){
         symbol="";
         cls="mobile-day-present";
         present++;
+      }else if(d.status==="half"){
+        symbol="";
+        cls="mobile-day-half";
+        half++;
       }else if(d.status==="absent"){
         symbol="";
         cls="mobile-day-absent";
@@ -837,7 +859,7 @@ function renderPersonalAttendance(){
         unrecorded++;
       }
 
-      if(d.status!=="off"){
+      if(true){
         dayCells+=`
           <div class="mobile-day ${cls}">
             <span>${day}</span>
@@ -854,7 +876,8 @@ function renderPersonalAttendance(){
         </div>
 
         <div class="attendance-worker-stats">
-          <span>✓ 出勤 ${present} 天</span>
+          <span>出勤折算 ${present+half*0.5} 天</span>
+          <span>½ 半天 ${half} 天</span>
           <span>✕ 缺勤 ${absent} 天</span>
           <span>? 未记录 ${unrecorded} 天</span>
         </div>
@@ -873,12 +896,13 @@ function renderPersonalAttendance(){
     head+=`<th>${day}</th>`;
   }
 
-  head+="<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
+  head+="<th>折算出勤</th><th>半天</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
 
   let rows="";
 
   workers.forEach(w=>{
     let present=0;
+    let half=0;
     let absent=0;
     let off=0;
     let unrecorded=0;
@@ -898,19 +922,23 @@ function renderPersonalAttendance(){
         status="";
         cls="daily-present";
         present++;
+      }else if(d.status==="half"){
+        status="";
+        cls="daily-half";
+        half++;
       }else if(d.status==="absent"){
         status="";
         cls="daily-absent";
         absent++;
       }else if(d.status==="off"){
-        status="休";
+        status="";
         cls="daily-off";
         off++;
       }else{
         unrecorded++;
       }
 
-      const statusLabel=d.status==='present'?'出勤':d.status==='absent'?'缺勤':d.status==='off'?'休息':'未记录';
+      const statusLabel=d.status==='present'?'出勤':d.status==='half'?'半天':d.status==='absent'?'缺勤':d.status==='off'?'休息':'未记录';
       cells+=`<td class="${cls}" title="${statusLabel}" aria-label="${statusLabel}">${status}</td>`;
     }
 
@@ -918,7 +946,8 @@ function renderPersonalAttendance(){
       <tr>
         <td><strong>${escapeHTML(w.name)}</strong></td>
         ${cells}
-        <td><strong>${present}</strong></td>
+        <td><strong>${present+half*0.5}</strong></td>
+        <td>${half}</td>
         <td>${absent}</td>
         <td>${off}</td>
         <td>${unrecorded}</td>
@@ -950,7 +979,7 @@ function renderPersonalAttendance(){
   let text=`${month} 员工总体出勤表\n\n`;
 
   workers.forEach(w=>{
-    let present=0,absent=0,off=0,unrecorded=0;
+    let present=0,half=0,absent=0,off=0,unrecorded=0;
     let dayCells="";
     let daysText="";
 
@@ -963,6 +992,9 @@ function renderPersonalAttendance(){
       if(d.status==="present"){
         status="✓";
         present++;
+      }else if(d.status==="half"){
+        status="½";
+        half++;
       }else if(d.status==="absent"){
         status="✕";
         absent++;
@@ -978,7 +1010,7 @@ function renderPersonalAttendance(){
 
     text+=`${w.name}\n`;
     text+=`${daysText}\n`;
-    text+=`出勤 ${present} 天｜缺勤 ${absent} 天｜休息 ${off} 天｜未记录 ${unrecorded} 天\n\n`;
+    text+=`折算出勤 ${present+half*0.5} 天｜半天 ${half} 天｜缺勤 ${absent} 天｜休息 ${off} 天｜未记录 ${unrecorded} 天\n\n`;
   });
 
   return text.trim();
@@ -1012,17 +1044,17 @@ function printAttendanceSummary(){ openReportPreview("attendance-summary"); }
 function getPersonalReportText(){
   const month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value,w=workers.find(x=>x.id===workerId);if(!w)return "";
   let text=`${w.name} - ${month} 个人日勤表\nDaily RM ${money(w.dailyRate)} | OT RM ${money(w.otRate)}/小时\n\n`;
-  let present=0,off=0,absent=0,ot=0,base=0,otPay=0;
+  let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0;
   for(let day=1;day<=daysInMonth(month);day++){
     const date=month+"-"+String(day).padStart(2,"0"),d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
-    const status=d.status==="present"?"出勤":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
-    if(d.status==="present"){present++;base+=Number(w.dailyRate)}else if(d.status==="off")off++;else if(d.status==="absent")absent++;
+    const status=d.status==="present"?"出勤":d.status==="half"?"半天":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
+    if(d.status==="present"){present++;base+=Number(w.dailyRate)}else if(d.status==="half"){half++;base+=Number(w.dailyRate)*0.5}else if(d.status==="off")off++;else if(d.status==="absent")absent++;
     ot+=Number(d.ot||0);otPay+=Number(d.ot||0)*Number(w.otRate);
-    const pay=(d.status==="present"?Number(w.dailyRate):0)+Number(d.ot||0)*Number(w.otRate);
+    const pay=(d.status==="present"?Number(w.dailyRate):d.status==="half"?Number(w.dailyRate)*0.5:0)+Number(d.ot||0)*Number(w.otRate);
     text+=`${date}  ${status}  OT ${Number(d.ot||0)}h  RM ${money(pay)}\n`;
   }
   const calculated=base+otPay,key=w.id+"_"+month,final=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
-  text+=`\n出勤：${present}天\n休息：${off}天\n缺勤：${absent}天\nOT：${ot}小时\n基本工资：RM ${money(base)}\nOT工资：RM ${money(otPay)}\n本月工资：RM ${money(final)}`;
+  text+=`\n出勤：${present}天\n半天：${half}天\n折算出勤：${present+half*0.5}天\n休息：${off}天\n缺勤：${absent}天\nOT：${ot}小时\n基本工资：RM ${money(base)}\nOT工资：RM ${money(otPay)}\n本月工资：RM ${money(final)}`;
   return text;
 }
 async function copyPersonalReport(){
@@ -1156,15 +1188,16 @@ function pdfV4Pages(type){
       ctx.fillStyle='#111827';ctx.font=(header?'bold ':'')+font+'px Arial, PingFang SC, sans-serif';
       values.forEach((v,i)=>{
         const left=positions[i],right=positions[i+1];
-        const coloredAttendance=!header&&opts.attendanceColors&&i>=1&&i<=opts.attendanceDays&&(v==='P'||v==='A');
-        if(coloredAttendance){
-          // Use a filled cell, not the P/A letters, on the generated offline PDF.
-          ctx.fillStyle=v==='P'?'#06b6d4':'#ef4444';
+        const isGridCell=!header&&opts.attendanceColors&&i>=1&&i<=opts.attendanceDays;
+        const gridColor=isGridCell?({P:'#06b6d4',H:'#f5ce55',A:'#ef4444'}[v]||null):null;
+        const personalColor=!header&&opts.personalAttendanceColors&&i===1?({Present:'#06b6d4','Half Day':'#f5ce55',Absent:'#ef4444','Not Recorded':'#e5e7eb'}[v]||null):null;
+        if(gridColor||personalColor){
+          ctx.fillStyle=gridColor||personalColor;
           ctx.fillRect(left+1,y+1,right-left-2,rowH-2);
         }
         if(i) {ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(left,y+rowH);ctx.stroke()}
-        ctx.fillStyle='#111827';
-        const value=coloredAttendance?'':String(v==null?'':v);
+        ctx.fillStyle=personalColor&&v==='Absent'?'#ffffff':'#111827';
+        const value=gridColor?'':String(v==null?'':v);
         ctx.save();ctx.beginPath();ctx.rect(left+5,y+2,right-left-10,rowH-4);ctx.clip();
         ctx.textBaseline='middle';
         if(i===0){ctx.textAlign='left';ctx.fillText(value,left+8,y+rowH/2)}
@@ -1210,42 +1243,46 @@ function pdfV4Pages(type){
     // Show the same full-cell colors in the legend as in the attendance grid.
     ctx.fillStyle='#06b6d4';ctx.fillRect(margin,y-17,23,23);
     ctx.fillStyle='#111827';ctx.font='19px Arial, PingFang SC, sans-serif';ctx.fillText('Present',margin+33,y);
-    ctx.fillStyle='#ef4444';ctx.fillRect(margin+165,y-17,23,23);
-    ctx.fillStyle='#111827';ctx.fillText('Absent',margin+198,y);
-    ctx.fillText('O = Day Off     - = Not Recorded',margin+325,y);y+=37;
-    const head=['Worker',...Array.from({length:days},(_,i)=>String(i+1)),'Present','Absent','Off','Not Recorded'];
+    ctx.fillStyle='#f5ce55';ctx.fillRect(margin+165,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.fillText('Half Day',margin+198,y);
+    ctx.fillStyle='#ef4444';ctx.fillRect(margin+340,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.fillText('Absent',margin+373,y);
+    ctx.fillText('Blank = Day Off     - = Not Recorded',margin+520,y);y+=37;
+    const head=['Worker',...Array.from({length:days},(_,i)=>String(i+1)),'Worked','Half','Absent','Off','Not Recorded'];
     const rows=workers.map(w=>{
-      let present=0,absent=0,off=0,unrecorded=0;
+      let present=0,half=0,absent=0,off=0,unrecorded=0;
       const values=Array.from({length:days},(_,i)=>{
         const date=month+'-'+String(i+1).padStart(2,'0');
         const status=getAttendance(w.id,date).status;
         if(status==='present'){present++;return 'P'}
+        if(status==='half'){half++;return 'H'}
         if(status==='absent'){absent++;return 'A'}
-        if(status==='off'){off++;return 'O'}
+        if(status==='off'){off++;return ''}
         unrecorded++;return '-';
       });
-      return [w.name,...values,present,absent,off,unrecorded];
+      return [w.name,...values,present+half*0.5,half,absent,off,unrecorded];
     });
-    table(head,rows,[8,...Array(days).fill(1),3,3,2,4],{font:14,rowH:44,attendanceColors:true,attendanceDays:days});
+    table(head,rows,[8,...Array(days).fill(1),3,2,3,2,4],{font:14,rowH:44,attendanceColors:true,attendanceDays:days});
   }else{
     const id=document.getElementById('personalWorker').value;
     const w=workers.find(v=>v.id===id);
     if(!w)throw new Error('Please select a worker');
     line('Worker: '+w.name+'     Daily Rate: RM '+money(w.dailyRate)+'     OT: RM '+money(w.otRate)+'/hr',20);
-    let present=0,off=0,absent=0,ot=0,base=0,otPay=0;
+    let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0;
     const rows=[];
     for(let day=1;day<=daysInMonth(month);day++){
       const date=month+'-'+String(day).padStart(2,'0'),d=getAttendance(w.id,date);
       if(d.status==='present'){present++;base+=Number(w.dailyRate)}
+      else if(d.status==='half'){half++;base+=Number(w.dailyRate)*0.5}
       else if(d.status==='off')off++;else if(d.status==='absent')absent++;
       const hours=Number(d.ot||0);ot+=hours;otPay+=hours*Number(w.otRate);
-      const label={present:'Present',absent:'Absent',off:'Day Off',unrecorded:'Not Recorded'}[d.status]||'Not Recorded';
-      rows.push([date,label,hours,money((d.status==='present'?Number(w.dailyRate):0)+hours*Number(w.otRate))]);
+      const label={present:'Present',half:'Half Day',absent:'Absent',off:'Day Off',unrecorded:'Not Recorded'}[d.status]||'Not Recorded';
+      rows.push([date,label,hours,money((d.status==='present'?Number(w.dailyRate):d.status==='half'?Number(w.dailyRate)*0.5:0)+hours*Number(w.otRate))]);
     }
-    table(['Date','Attendance','OT (hrs)','Daily Pay (RM)'],rows,[30,30,16,24],{font:19,rowH:41});
+    table(['Date','Attendance','OT (hrs)','Daily Pay (RM)'],rows,[30,30,16,24],{font:19,rowH:41,personalAttendanceColors:true});
     const key=w.id+'_'+month;
     const total=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):base+otPay;
-    y+=22;line('Present: '+present+' days     Day Off: '+off+'     Absent: '+absent+'     OT: '+ot+' hrs',20);
+    y+=22;line('Present: '+present+' days     Half Day: '+half+'     Day Off: '+off+'     Absent: '+absent+'     OT: '+ot+' hrs',20);
     line('Basic Pay: RM '+money(base)+'     OT Pay: RM '+money(otPay)+'     Total Salary: RM '+money(total),20);
   }
   finishPage();
@@ -1306,7 +1343,7 @@ async function openReportPreview(type){
 
 // V5: user-exportable, portable JSON backup. No automatic data upload or cloud sync.
 function currentPayload(){
-  return {app:'Site Daily Record',schemaVersion:5.1,exportedAt:new Date().toISOString(),data:{workers,attendance,advances,salaryOverrides,sites}};
+  return {app:'Site Daily Record',schemaVersion:5.2,exportedAt:new Date().toISOString(),data:{workers,attendance,advances,salaryOverrides,sites}};
 }
 function refreshBackupStatus(){
   const target=document.getElementById('backupStatus');if(!target)return;
@@ -1340,7 +1377,7 @@ function validBackup(data){
   if(!data.workers.every(w=>hasId(w)&&typeof w.name==='string'&&validMoney(w.dailyRate)&&validMoney(w.otRate)))return false;
   if(!data.advances.every(a=>hasId(a)&&typeof a.workerId==='string'&&typeof a.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(a.date)&&validMoney(a.amount)))return false;
   if(!data.sites.every(s=>hasId(s)&&typeof s.name==='string'))return false;
-  if(!Object.entries(data.attendance).every(([k,v])=>/^\d{4}-\d{2}-\d{2}_.+/.test(k)&&v&&typeof v==='object'&&['present','absent','off','unrecorded'].includes(v.status)&&validMoney(v.ot||0)))return false;
+  if(!Object.entries(data.attendance).every(([k,v])=>/^\d{4}-\d{2}-\d{2}_.+/.test(k)&&v&&typeof v==='object'&&['present','half','absent','off','unrecorded'].includes(v.status)&&validMoney(v.ot||0)))return false;
   if(!Object.values(data.salaryOverrides).every(validMoney))return false;
   return true;
 }

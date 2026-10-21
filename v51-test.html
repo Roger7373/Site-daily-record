@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="zh-CN" data-test-mode="true">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="工地工人日勤、OT、预支薪水和月尾薪资">
+<link rel="manifest" href="/Site-daily-record/manifest.json">
+<title>Site Daily Record V5.1</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827;padding-bottom:75px}
+header{background:#111827;color:white;padding:18px 16px;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:21px} header p{margin:5px 0 0;color:#d1d5db;font-size:13px}
+.container{max-width:950px;margin:auto;padding:15px}.page{display:none}.page.active{display:block}
+.card{background:white;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card h2{margin:0 0 12px;font-size:18px}
+button{border:0;border-radius:8px;padding:10px 14px;font-size:14px;cursor:pointer}
+.btn-primary{background:#2563eb;color:white}.btn-green{background:#16a34a;color:white}.btn-red{background:#dc2626;color:white}
+.btn-gray{background:#e5e7eb;color:#111827}.btn-orange{background:#ea580c;color:white}
+.btn-purple{background:#7c3aed;color:white}
+input,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;margin-top:5px}
+label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+.stat{background:#f9fafb;border-radius:10px;padding:12px;text-align:center}.stat-title{color:#6b7280;font-size:12px}
+.stat-value{font-size:20px;font-weight:bold;margin-top:4px}.worker{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px}
+.worker-name{font-size:17px;font-weight:bold}.worker-info{color:#6b7280;font-size:13px;margin-top:4px}
+.worker-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.att-row{border-bottom:1px solid #e5e7eb;padding:12px 0}.att-name{font-weight:bold;margin-bottom:8px}
+.att-buttons{display:flex;gap:6px;flex-wrap:wrap}.att-btn{padding:7px 10px;font-size:13px}
+.att-present{background:#dcfce7;color:#166534}.att-off{background:#fef3c7;color:#92400e}.att-absent{background:#fee2e2;color:#991b1b}
+.att-selected{outline:3px solid #2563eb}.ot-box{margin-top:8px;display:flex;align-items:center;gap:8px}.ot-box input{width:90px;margin:0}
+/* 总出勤：电脑默认显示完整表格 */
+.attendance-summary-mobile{
+  display:none;
+}
+
+/* 手机总出勤卡片 */
+@media(max-width:699px){
+  .attendance-summary-mobile{
+    display:block;
+  }
+
+  .attendance-summary-desktop{
+    display:none;
+  }
+
+  .attendance-worker-card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);
+  }
+
+  .attendance-worker-name{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:10px;
+  }
+
+  .attendance-worker-stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 12px;
+    font-size:13px;
+    margin-bottom:12px;
+  }
+
+  .mobile-days{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+
+  .mobile-day{
+    text-align:center;
+    border-radius:8px;
+    padding:6px 2px;
+    font-size:11px;
+  }
+
+  .mobile-day span{
+    display:block;
+    margin-bottom:2px;
+  }
+
+  .mobile-day b{
+    font-size:16px;
+  }
+
+  .mobile-day-present{
+    background:#06b6d4;
+    color:#073642;
+  }
+
+  .mobile-day-absent{
+    background:#ef4444;
+    color:#ffffff;
+  }
+
+  .mobile-day-unrecorded{
+    background:#f3f4f6;
+    color:#6b7280;
+  }
+}
+
+/* 打印 / PDF 永远使用完整表格 */
+@media print{
+  .attendance-summary-mobile{
+    display:none!important;
+  }
+
+  .attendance-summary-desktop{
+    display:block!important;
+  }
+}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f9fafb}
+.total{font-size:20px;font-weight:bold}.empty{text-align:center;color:#6b7280;padding:25px 10px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:65px;background:white;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:20;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.nav-btn{flex:1;max-width:180px;background:white;color:#6b7280;border-radius:0;padding:7px 2px;font-size:12px}.nav-btn.active{color:#2563eb;font-weight:bold}
+.nav-icon{font-size:20px;display:block;margin-bottom:2px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:15px}.modal.show{display:flex}
+.modal-box{background:white;border-radius:14px;padding:18px;width:100%;max-width:500px;max-height:90vh;overflow:auto}.modal-title{font-size:19px;font-weight:bold;margin-bottom:15px}
+.month-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.month-row label{flex:1;min-width:150px}
+.small{font-size:12px;color:#6b7280}.amount{font-weight:bold}.danger-zone{border:1px solid #fecaca;background:#fff7f7}
+.report-title{text-align:center;margin-bottom:12px}.report-meta{text-align:center;color:#6b7280;font-size:13px;margin-bottom:15px}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.daily-present{color:#166534;font-weight:bold}.daily-off{color:#92400e}.daily-absent{color:#991b1b}.daily-unrecorded{color:#6b7280;font-weight:bold}
+/* V5.0 总出勤：出勤整格青色，缺勤整格红色（屏幕及打印）。 */
+.attendance-summary-table td.daily-present{background:#06b6d4!important;color:#073642!important}
+.attendance-summary-table td.daily-absent{background:#ef4444!important;color:#ffffff!important}
+.attendance-summary-table td.daily-present,.attendance-summary-table td.daily-absent{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+@media print{
+  body{background:white;padding:0}.no-print,header,.bottom-nav{display:none!important}.print-area{display:block!important}
+  .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}.container{max-width:none;padding:0}
+  table{min-width:0}th,td{font-size:11px;padding:6px}
+}
+/* V5 – compact, mobile-first improvements; classic reports and navigation preserved */
+.backup-notice{background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:12px;font-size:13px;margin:10px 0}
+.v5-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.v5-toolbar button{min-height:39px}
+.v5-toolbar input{max-width:230px;margin:0}
+.v5-muted{color:#64748b;font-size:12px;line-height:1.5}
+.v5-tag{display:inline-block;border:1px solid #d1d5db;color:#374151;background:#f9fafb;padding:5px 9px;border-radius:100px;margin:3px 3px 3px 0;font-size:12px}
+.v5-detail{margin-top:12px;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px}
+.v5-detail summary{font-size:14px;font-weight:bold;cursor:pointer;padding:3px 0}
+.v5-detail ul{padding-left:19px;font-size:13px;line-height:1.75;margin:9px 0 3px}
+.v5-site-select{max-width:100%;font-size:14px;margin:0}
+.v5-stat-line{font-size:13px;line-height:1.7;padding-top:8px;color:#334155}
+#appModeIndicator{display:none}
+body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;padding:8px 16px;font-weight:bold;text-align:center}
+@media(max-width:699px){header{padding:14px 13px}.container{padding:11px}.card{padding:13px}.att-row{padding:12px 0}.v5-toolbar input{width:100%;max-width:none}#siteManagement .v5-toolbar input{flex:1;min-width:125px}.bottom-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(65px + env(safe-area-inset-bottom))}body{padding-bottom:calc(83px + env(safe-area-inset-bottom))}}
+
+/* V5.1 Salary Advance – unchanged original attendance colors/PDF. */
+.modal#advanceModal{z-index:140}
+.adv-ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.adv-ledger-item{background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px}
+.adv-ledger-item span{display:block;color:#64748b;font-size:12px;margin-bottom:6px}
+.adv-ledger-item strong{font-size:19px;color:#111827;word-break:break-word}
+.adv-debt strong{color:#c2410c}
+.adv-net strong{color:#15803d}
+.adv-record{display:flex;align-items:center;gap:10px;border-top:1px solid #e5e7eb;padding:10px 0}
+.adv-record-main{min-width:0;flex:1;font-size:14px}
+.adv-record-main b{display:block;margin-top:3px}
+.adv-record-actions{display:flex;gap:6px}
+.adv-record-actions button{font-size:12px;padding:8px}
+.adv-explain{font-size:12px;color:#64748b;line-height:1.55}
+#advanceLedgerModal .modal-box{max-width:550px}
+@media(max-width:380px){.adv-record{flex-wrap:wrap}.adv-record-actions{width:100%;justify-content:flex-end}}
+</style>
+</head>
+<body>
+<header><h1>🏗️ Site Daily Record <span style="font-size:12px;color:#cbd5e1">V5.1</span></h1><p>工人日勤 · OT · 预支薪水 · 月尾结算</p></header>
+
+<div id="appModeIndicator">🧪 V5.1 测试模式：资料与正式 App 分开储存，修改不会影响旧 App。</div>
+<div class="container">
+<section id="page-workers" class="page active">
+  <div class="card no-print">
+    <h2>🛡️ 资料安全 · Backup</h2>
+    <div class="v5-muted">先备份原有的工人、日勤、OT、预支、工资修改及工地资料。备份可保存到 iPhone「文件」或分享。升级前须从旧 App 导出真实资料；测试版备份不等于旧 App 备份。</div>
+    <div class="backup-notice" id="backupStatus">正在检查本机资料…</div>
+    <div class="v5-toolbar">
+      <button class="btn-primary" onclick="exportBackup()">⬇️ 备份全部资料</button>
+      <button class="btn-gray" onclick="document.getElementById('backupFile').click()">⬆️ 恢复备份</button>
+      <input id="backupFile" type="file" accept=".json,application/json" hidden onchange="restoreBackupFromInput(this)">
+    </div>
+  </div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <div><h2>👷 工人名单</h2><div class="small">管理工人和每日工资</div></div>
+    <button class="btn-primary" onclick="openWorkerModal()">＋ 添加工人</button>
+  </div></div>
+  <div id="workersList"></div>
+</section>
+
+<section id="page-attendance" class="page">
+  <div class="card"><h2>📅 每日日勤</h2>
+    <label>日期<input type="date" id="attendanceDate" onchange="renderAttendance()"></label>
+    <div class="v5-toolbar">
+      <button class="btn-gray" onclick="shiftAttendanceDate(-1)">← 前一天</button>
+      <button class="btn-gray" onclick="document.getElementById('attendanceDate').value=getToday();renderAttendance()">今天</button>
+      <button class="btn-gray" onclick="shiftAttendanceDate(1)">后一天 →</button>
+    </div>
+    <div id="attendanceDayStats" class="v5-stat-line"></div>
+    <div class="v5-toolbar" style="margin-top:8px"><button class="btn-primary" onclick="fillMissingPresent()">✓ 只补记未记录为出勤</button></div>
+    <div class="v5-muted">已有出勤、休息和缺勤记录不会被批量覆盖。OT 依然可逐人填写。</div>
+  </div>
+  <div class="card" id="siteManagement"><h2>🏗️ 工地管理</h2>
+    <div class="v5-toolbar"><input id="newSiteName" placeholder="输入工地名称，例如 Site A" maxlength="70"><button class="btn-gray" onclick="addSite()">＋ 添加工地</button></div>
+    <div id="siteList" class="v5-muted" style="margin-top:9px"></div>
+    <div class="v5-muted">旧记录默认属于「未指定工地」，不会影响原有工资和出勤天数。</div>
+  </div>
+  <div class="card"><div id="attendanceList"></div></div>
+</section>
+
+<section id="page-salary" class="page">
+  <div class="card"><h2>💰 薪资</h2>
+    <label>结算月份<input type="month" id="salaryMonth" onchange="renderSalary()"></label>
+  </div>
+  <div class="card"><div class="v5-muted">预支超过本月工资的部分，会自动结转下个月；历史手动调整工资也会计入计算。尚欠余额不会重复记录为新的预支。修改旧月份的预支或工资，会重新计算后续月份。</div></div>
+  <div id="salaryList"></div>
+</section>
+
+<section id="page-summary" class="page">
+  <div class="card"><h2>📊 月尾结算</h2>
+    <label>结算月份<input type="month" id="summaryMonth" onchange="renderSummary()"></label>
+  </div>
+  <div id="summaryContent"></div>
+  <div id="siteMonthSummary"></div>
+  <div class="card no-print">
+  <h2>📤 结算报告</h2>
+  <div class="small" style="margin-bottom:10px">
+    可打印、保存 PDF、复制或直接转发给 WhatsApp。
+  </div>
+
+  <button class="btn-primary" onclick="printSummary()">
+    📄 生成 / 分享 PDF
+  </button>
+
+  <button class="btn-primary" onclick="copySummaryReport()">
+    📋 复制报告
+  </button>
+
+  <button class="btn-primary" onclick="shareSummaryReport()">
+    📤 转发报告
+  </button>
+</div>
+  <div class="card no-print"><h2>🛡️ 资料备份</h2>
+    <div class="v5-muted" style="margin-bottom:10px">本版本已移除容易误按的「清除全部资料」按钮。</div>
+    <button class="btn-primary" onclick="exportBackup()">⬇️ 导出完整备份</button>
+  </div>
+</section>
+
+<section id="page-personal" class="page">
+  <div class="card">
+    <h2>👤 个人日勤表</h2>
+    <div class="month-row">
+      <label>工人<select id="personalWorker" onchange="renderPersonalAttendance()"></select></label>
+      <label>月份<input type="month" id="personalMonth" onchange="renderPersonalAttendance()"></label>
+    </div>
+    <div class="small">可打印、保存 PDF、复制或分享给 WhatsApp 等。</div>
+  </div>
+  <div id="personalReport"></div>
+</section>
+  <section id="page-attendance-summary" class="page">
+  <div class="card">
+    <h2>👥 总出勤</h2>
+
+    <div class="month-row">
+      <label>月份
+        <input type="month" id="attendanceSummaryMonth" onchange="renderAttendanceSummary()">
+      </label>
+    </div>
+
+    <div class="small">
+      ✓ 出勤　✕ 缺勤　? 未记录
+    </div>
+  </div>
+
+  <div id="attendanceSummaryContent"></div>
+
+  <div class="card no-print">
+    <h2>📤 出勤表</h2>
+
+    <div class="report-actions">
+      <button class="btn-primary" onclick="printAttendanceSummary()">
+        📄 生成 / 分享 PDF
+      </button>
+
+      <button class="btn-green" onclick="copyAttendanceSummary()">
+        📋 复制出勤表
+      </button>
+
+      <button class="btn-purple" onclick="shareAttendanceSummary()">
+        📤 转发出勤表
+      </button>
+    </div>
+  </div>
+</section>
+</div>
+
+<div class="bottom-nav">
+<button class="nav-btn active" id="nav-workers" onclick="showPage('workers')"><span class="nav-icon">👷</span>工人</button>
+<button class="nav-btn" id="nav-attendance" onclick="showPage('attendance')"><span class="nav-icon">📅</span>日勤</button>
+<button class="nav-btn" id="nav-salary" onclick="showPage('salary')"><span class="nav-icon">💰</span>薪资</button>
+<button class="nav-btn" id="nav-summary" onclick="showPage('summary')"><span class="nav-icon">📊</span>结算</button>
+<button class="nav-btn" id="nav-attendance-summary" onclick="showPage('attendance-summary')"><span class="nav-icon">👥</span>总出勤</button>
+  <button class="nav-btn" id="nav-personal" onclick="showPage('personal')"><span class="nav-icon">👤</span>个人</button>
+</div>
+
+<div class="modal" id="workerModal"><div class="modal-box">
+<div class="modal-title" id="workerModalTitle">添加工人</div>
+<label>工人姓名<input id="workerName" placeholder="例如：Ali"></label>
+<label>每日工资 RM<input id="workerDailyRate" type="number" step="0.01" placeholder="例如：80"></label>
+<label>OT 每小时 RM<input id="workerOTRate" type="number" step="0.01" placeholder="例如：12"></label>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-gray" onclick="closeWorkerModal()">取消</button><button class="btn-primary" id="workerSaveBtn" onclick="saveWorker()">保存</button></div>
+</div></div>
+
+<div class="modal" id="advanceModal"><div class="modal-box">
+<div class="modal-title" id="advanceModalTitle">新增预支</div><div id="advanceWorkerName" style="font-weight:bold;margin-bottom:12px"></div>
+<label>日期<input type="date" id="advanceDate"></label>
+<label>预支金额 RM<input type="number" id="advanceAmount" min="0.01" step="0.01" placeholder="例如：100"></label>
+<div class="adv-explain">每笔预支单独保存；如修改以前月份的资料，后续结转金额会自动更新。</div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn-gray" onclick="closeAdvanceModal()">取消</button><button class="btn-orange" id="advanceSaveBtn" onclick="addAdvance()">保存预支</button></div>
+</div></div>
+<div class="modal" id="advanceLedgerModal"><div class="modal-box">
+<div class="modal-title" id="advanceLedgerTitle">预支管理</div>
+<div class="adv-explain">月度余额是自动计算的，不会额外产生一笔“结转预支”。</div>
+<div id="advanceLedgerContent"></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn-gray" onclick="closeAdvanceLedger()">关闭</button></div>
+</div></div>
+
+<script>
+// Production retains all original V4 keys. The independent test file uses isolated keys.
+const TEST_MODE=document.documentElement.dataset.testMode==='true';
+const WORKER_KEY=TEST_MODE?'siteWorkersV5Test':'siteWorkers';
+const ATT_KEY=TEST_MODE?'siteAttendanceV5Test':'siteAttendance';
+const ADVANCE_KEY=TEST_MODE?'siteAdvancesV5Test':'siteAdvances';
+const SALARY_KEY=TEST_MODE?'siteSalaryOverridesV5Test':'siteSalaryOverrides';
+const SITE_KEY=TEST_MODE?'siteSitesV5Test':'siteDailySitesV5';
+const RECOVERY_KEY=TEST_MODE?'siteV5TestRestorePoint':'siteV5PreRestorePoint';
+const storeKeys=[WORKER_KEY,ATT_KEY,ADVANCE_KEY,SALARY_KEY,SITE_KEY];
+const storageReadErrors=[];
+function readLocal(key,fallback){try{const v=localStorage.getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){storageReadErrors.push(key);console.error('读取资料失败',key,e);return fallback}}
+let workers=readLocal(WORKER_KEY,[]);
+let attendance=readLocal(ATT_KEY,{});
+let advances=readLocal(ADVANCE_KEY,[]);
+let salaryOverrides=readLocal(SALARY_KEY,{});
+let sites=readLocal(SITE_KEY,[]);
+let backupExportedThisSession=false;
+
+let selectedAdvanceWorker=null;
+let editingAdvanceId=null;
+let ledgerWorkerId=null;
+let ledgerMonth=null;
+let editingWorkerId=null;
+
+function saveData(){
+  if(storageReadErrors.length){alert('旧资料读取异常，为避免覆盖，已停止保存。请先导出 JSON 备份并检查资料。');throw new Error('Stored data failed to parse: '+storageReadErrors.join(','))}
+  const before=storeKeys.map(k=>localStorage.getItem(k));
+  const next=[workers,attendance,advances,salaryOverrides,sites].map(x=>JSON.stringify(x));
+  try{
+    storeKeys.forEach((key,i)=>localStorage.setItem(key,next[i]));
+    refreshBackupStatus();
+  }catch(e){
+    console.error('保存失败，尝试回滚',e);
+    storeKeys.forEach((key,i)=>{try{before[i]===null?localStorage.removeItem(key):localStorage.setItem(key,before[i])}catch(_){}});
+    alert('储存失败，旧资料已尝试恢复。请先导出备份，并检查 iPhone 储存空间。');
+    location.reload();
+  }
+}
+
+function showPage(page){
+  document.querySelectorAll(".page").forEach(e=>e.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(e=>e.classList.remove("active"));
+  document.getElementById("nav-"+page).classList.add("active");
+  if(page==="workers")renderWorkers();
+  if(page==="attendance")renderAttendance();
+  if(page==="salary")renderSalary();
+  if(page==="summary")renderSummary();
+  if(page==="attendance-summary")renderAttendanceSummary();
+  if(page==="personal"){renderPersonalWorkerOptions();renderPersonalAttendance();}
+}
+
+function getToday(){
+  const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function getMonth(){return getToday().slice(0,7)}
+function money(v){return Number(v||0).toFixed(2)}
+function escapeHTML(v){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+
+function openWorkerModal(){
+  editingWorkerId=null;
+  document.getElementById("workerModalTitle").textContent="添加工人";
+  document.getElementById("workerSaveBtn").textContent="添加";
+  document.getElementById("workerName").value="";
+  document.getElementById("workerDailyRate").value="";
+  document.getElementById("workerOTRate").value="";
+  document.getElementById("workerModal").classList.add("show");
+}
+function editWorker(id){
+  const w=workers.find(x=>x.id===id); if(!w)return;
+  editingWorkerId=id;
+  document.getElementById("workerModalTitle").textContent="编辑工人";
+  document.getElementById("workerSaveBtn").textContent="保存修改";
+  document.getElementById("workerName").value=w.name;
+  document.getElementById("workerDailyRate").value=w.dailyRate;
+  document.getElementById("workerOTRate").value=w.otRate;
+  document.getElementById("workerModal").classList.add("show");
+}
+function closeWorkerModal(){document.getElementById("workerModal").classList.remove("show");editingWorkerId=null}
+function saveWorker(){
+  const name=document.getElementById("workerName").value.trim();
+  const dailyRate=Number(document.getElementById("workerDailyRate").value);
+  const otRate=Number(document.getElementById("workerOTRate").value);
+  if(!name){alert("请输入工人姓名");return}
+  if(!Number.isFinite(dailyRate)||dailyRate<=0){alert("请输入正确的每日工资");return}
+  if(!Number.isFinite(otRate)||otRate<0){alert("请输入正确的 OT 工资");return}
+  if(editingWorkerId){
+    const w=workers.find(x=>x.id===editingWorkerId);
+    if(w){w.name=name;w.dailyRate=dailyRate;w.otRate=otRate}
+  }else{
+    workers.push({id:Date.now().toString(),name,dailyRate,otRate});
+  }
+  saveData();closeWorkerModal();renderWorkers();renderPersonalWorkerOptions();
+}
+function deleteWorker(id){
+  const w=workers.find(x=>x.id===id);if(!w)return;
+  if(!confirm("确定要删除 "+w.name+" 吗？"))return;
+  workers=workers.filter(x=>x.id!==id);
+  saveData();renderWorkers();renderPersonalWorkerOptions();
+}
+function renderWorkers(){
+  const box=document.getElementById("workersList");
+  if(!workers.length){box.innerHTML='<div class="card empty">还没有工人<br><br>点击「＋ 添加工人」开始</div>';return}
+  box.innerHTML=workers.map(w=>`
+    <div class="card worker">
+      <div class="worker-name">${escapeHTML(w.name)}</div>
+      <div class="worker-info">Daily：RM ${money(w.dailyRate)} &nbsp;·&nbsp; OT：RM ${money(w.otRate)}/小时</div>
+      <div class="worker-actions">
+        <button class="btn-orange" onclick="openAdvanceModal('${w.id}')">＋ 预支薪水</button>
+        <button class="btn-gray" onclick="editWorker('${w.id}')">✏️ 编辑</button>
+        <button class="btn-red" onclick="deleteWorker('${w.id}')">删除</button>
+      </div>
+    </div>`).join("");
+}
+
+function getAttendanceKey(date,id){return date+"_"+id}
+function getAttendance(id,date){return attendance[getAttendanceKey(date,id)]||{status:"unrecorded",ot:0}}
+function setAttendance(id,date,status){
+  const key=getAttendanceKey(date,id),old=attendance[key]||{};
+  attendance[key]={...old,status,ot:Number(old.ot||0)};saveData();renderAttendance();
+}
+function setOT(id,date,value){
+  const key=getAttendanceKey(date,id),old=attendance[key]||{status:"present",ot:0};
+  const valueNumber=Number(value);
+  if(!Number.isFinite(valueNumber)||valueNumber<0){alert('请输入有效的 OT 小时');renderAttendance();return}
+  attendance[key]={...old,status:old.status||"present",ot:valueNumber};saveData();renderAttendance();
+}
+function setAttendanceSite(id,date,siteId){
+  const key=getAttendanceKey(date,id),old=attendance[key]||{};
+  if(siteId && !sites.some(s=>s.id===siteId)){alert('工地不存在');renderAttendance();return}
+  attendance[key]={...old,status:old.status||'unrecorded',ot:Number(old.ot||0),siteId};
+  saveData();renderAttendance();
+}
+function shiftAttendanceDate(delta){
+  const input=document.getElementById('attendanceDate'),d=new Date((input.value||getToday())+'T12:00:00');
+  d.setDate(d.getDate()+delta);
+  const localDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  input.value=localDate;renderAttendance();
+}
+function fillMissingPresent(){
+  const date=document.getElementById('attendanceDate').value||getToday();
+  const missing=workers.filter(w=>getAttendance(w.id,date).status==='unrecorded');
+  if(!missing.length){alert('今天没有未记录的工人');return}
+  if(!confirm('只将 '+missing.length+' 位未记录工人设为出勤？\n\n已填写的状态不会改变。'))return;
+  missing.forEach(w=>{const key=getAttendanceKey(date,w.id),old=attendance[key]||{};attendance[key]={...old,status:'present',ot:Number(old.ot||0)}});
+  saveData();renderAttendance();
+}
+function addSite(){
+  const field=document.getElementById('newSiteName'),name=field.value.trim();
+  if(!name){alert('请输入工地名称');return}
+  if(sites.some(s=>s.name.toLowerCase()===name.toLowerCase())){alert('工地已经存在');return}
+  sites.push({id:'s'+Date.now().toString()+Math.random().toString(36).slice(2,6),name});
+  field.value='';saveData();renderAttendance();
+}
+function renameSite(id){
+  const site=sites.find(s=>s.id===id);if(!site)return;
+  const next=prompt('修改工地名称：',site.name);if(next===null)return;
+  const name=next.trim();if(!name){alert('名称不能为空');return}
+  if(sites.some(s=>s.id!==id&&s.name.toLowerCase()===name.toLowerCase())){alert('工地名称重复');return}
+  site.name=name;saveData();renderAttendance();
+}
+function siteName(id){return sites.find(s=>s.id===id)?.name||'未指定工地'}
+function renderSiteManager(){
+  const box=document.getElementById('siteList');
+  box.innerHTML=sites.length?sites.map(s=>'<button class="v5-tag" onclick="renameSite(\''+escapeHTML(s.id)+'\')">'+escapeHTML(s.name)+' ✏️</button>').join(''):'未添加工地（可以暂时不填）';
+}
+function getSiteBreakdown(month,workerId){
+  const result=new Map();
+  Object.keys(attendance).forEach(key=>{
+    if(!key.startsWith(month+'-'))return;
+    const separator=key.indexOf('_');if(separator<0)return;
+    const id=key.slice(separator+1);
+    if(workerId && id!==workerId)return;
+    const w=workers.find(w=>w.id===id);if(!w)return;
+    const d=attendance[key]||{},sid=(d.siteId&&sites.some(s=>s.id===d.siteId))?d.siteId:'';
+    const row=result.get(sid)||{siteId:sid,days:0,hours:0,amount:0};
+    if(d.status==='present'){row.days++;row.amount+=Number(w.dailyRate)}
+    const hours=Number(d.ot||0);row.hours+=hours;row.amount+=hours*Number(w.otRate);
+    result.set(sid,row);
+  });
+  return [...result.values()].filter(r=>r.days>0||r.hours>0).sort((a,b)=>b.amount-a.amount);
+}
+function renderAttendance(){
+  const date=document.getElementById("attendanceDate").value||getToday(),box=document.getElementById("attendanceList");
+  renderSiteManager();
+  const counters={present:0,absent:0,off:0,unrecorded:0};
+  workers.forEach(w=>{const st=getAttendance(w.id,date).status;counters[st]===undefined?counters.unrecorded++:counters[st]++});
+  document.getElementById('attendanceDayStats').textContent='出勤 '+counters.present+' · 缺勤 '+counters.absent+' · 休息 '+counters.off+' · 未记录 '+counters.unrecorded+' · 总人数 '+workers.length;
+  if(!workers.length){box.innerHTML='<div class="empty">请先到「工人」添加工人</div>';return}
+  box.innerHTML=workers.map(w=>{
+    const d=getAttendance(w.id,date);
+    const select='<select class="v5-site-select" aria-label="'+escapeHTML(w.name)+' 工地" onchange="setAttendanceSite(\''+w.id+'\',\''+date+'\',this.value)"><option value="">未指定工地</option>'+sites.map(site=>'<option value="'+escapeHTML(site.id)+'" '+(d.siteId===site.id?'selected':'')+'>'+escapeHTML(site.name)+'</option>').join('')+'</select>';
+    return `<div class="att-row">
+      <div class="att-name">${escapeHTML(w.name)}</div>
+      <div class="att-buttons">
+        <button class="att-btn att-present ${d.status==="present"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','present')">✓ 出勤</button>
+        <button class="att-btn att-off ${d.status==="off"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','off')">休息</button>
+        <button class="att-btn att-absent ${d.status==="absent"?"att-selected":""}" onclick="setAttendance('${w.id}','${date}','absent')">缺勤</button>
+      </div>
+      <div class="ot-box"><span>OT 小时：</span><input type="number" min="0" step="0.5" value="${Number(d.ot||0)}" onchange="setOT('${w.id}','${date}',this.value)"></div>
+      <div style="margin-top:9px"><label style="margin:0 0 4px;font-weight:normal;color:#64748b">所属工地</label>${select}</div>
+    </div>`}).join("");
+}
+
+function getMonthData(workerId,month){
+  let presentDays=0,otHours=0;
+  Object.keys(attendance).forEach(key=>{
+    if(!key.startsWith(month+"-")||!key.endsWith("_"+workerId))return;
+    const d=attendance[key];
+    if(d.status==="present")presentDays++;
+    otHours+=Number(d.ot||0);
+  });
+  return {presentDays,otHours};
+}
+function getAdvance(workerId,month){
+  return advances.filter(a=>a.workerId===workerId&&a.date&&a.date.startsWith(month)).reduce((s,a)=>s+Number(a.amount||0),0);
+}
+// V5.1: all carry-forward arithmetic uses cents to prevent RM 0.01 float drift.
+function toCents(value){return Math.round(Number(value||0)*100)}
+function knownMonthsForWorker(workerId,throughMonth){
+  const months=new Set([throughMonth]);
+  Object.keys(attendance).forEach(k=>{
+    const marker='_'+workerId;
+    if(k.endsWith(marker)&&/^\d{4}-\d{2}-\d{2}_/.test(k))months.add(k.slice(0,7));
+  });
+  advances.forEach(a=>{if(a.workerId===workerId&&/^\d{4}-\d{2}-\d{2}$/.test(a.date))months.add(a.date.slice(0,7))});
+  Object.keys(salaryOverrides).forEach(k=>{if(k.startsWith(workerId+'_')&&/^\d{4}-\d{2}$/.test(k.slice(workerId.length+1)))months.add(k.slice(workerId.length+1))});
+  return Array.from(months).filter(m=>m<=throughMonth).sort();
+}
+function getMonthEarningsCents(worker,month){
+  const key=worker.id+'_'+month;
+  if(Object.prototype.hasOwnProperty.call(salaryOverrides,key))return toCents(salaryOverrides[key]);
+  const d=getMonthData(worker.id,month);
+  return toCents(d.presentDays*Number(worker.dailyRate)+d.otHours*Number(worker.otRate));
+}
+function getPreviousDebt(workerId,month){
+  const worker=workers.find(w=>w.id===workerId);if(!worker)return 0;
+  let debt=0;
+  knownMonthsForWorker(workerId,month).filter(m=>m<month).forEach(m=>{
+    debt=Math.max(0,debt+toCents(getAdvance(workerId,m))-getMonthEarningsCents(worker,m));
+  });
+  return debt/100;
+}
+function calculateSalary(worker,month){
+  const d=getMonthData(worker.id,month);
+  const basePayCents=toCents(d.presentDays*Number(worker.dailyRate));
+  const otPayCents=toCents(d.otHours*Number(worker.otRate));
+  const currentAdvanceCents=toCents(getAdvance(worker.id,month));
+  const previousDebtCents=toCents(getPreviousDebt(worker.id,month));
+  const calculatedEarningsCents=basePayCents+otPayCents;
+  const totalEarningsCents=getMonthEarningsCents(worker,month);
+  const totalDeductionCents=previousDebtCents+currentAdvanceCents;
+  const netCents=Math.max(0,totalEarningsCents-totalDeductionCents);
+  const outstandingDebtCents=Math.max(0,totalDeductionCents-totalEarningsCents);
+  return {
+    presentDays:d.presentDays,otHours:d.otHours,basePay:basePayCents/100,otPay:otPayCents/100,
+    advance:currentAdvanceCents/100,previousDebt:previousDebtCents/100,
+    calculatedEarnings:calculatedEarningsCents/100,totalEarnings:totalEarningsCents/100,
+    net:netCents/100,outstandingDebt:outstandingDebtCents/100,
+    totalDeduction:totalDeductionCents/100
+  };
+}
+function editSalary(workerId,month){
+  const w=workers.find(x=>x.id===workerId);if(!w)return;
+  const key=workerId+"_"+month;
+  const current=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculateSalary(w,month).totalEarnings;
+  const value=prompt(w.name+" - "+month+"\n\n修改本月工资（基本 + OT）RM：",current);
+  if(value===null)return;
+  const amount=Number(value);
+  if(!Number.isFinite(amount)||amount<0){alert("请输入正确的工资金额");return}
+  salaryOverrides[key]=amount;saveData();renderSalary();renderSummary();
+}
+
+function validAdvanceDate(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+  const d=new Date(value+'T12:00:00');
+  return !Number.isNaN(d.getTime()) && d.getFullYear()===Number(value.slice(0,4)) && d.getMonth()+1===Number(value.slice(5,7)) && d.getDate()===Number(value.slice(8,10));
+}
+function openAdvanceModal(workerId,editId){
+  const w=workers.find(x=>x.id===workerId);if(!w)return;
+  selectedAdvanceWorker=workerId;editingAdvanceId=editId||null;
+  const record=editId?advances.find(a=>a.id===editId && a.workerId===workerId):null;
+  if(editId&&!record){alert('找不到该笔预支记录');return}
+  document.getElementById('advanceModalTitle').textContent=record?'修改预支记录':'新增预支';
+  document.getElementById('advanceSaveBtn').textContent=record?'保存修改':'保存预支';
+  document.getElementById('advanceWorkerName').textContent=w.name;
+  const chosenMonth=ledgerMonth||document.getElementById('salaryMonth').value||getMonth();
+  const suggestedDate=chosenMonth===getMonth()?getToday():chosenMonth+'-01';
+  document.getElementById('advanceDate').value=record?record.date:suggestedDate;
+  document.getElementById('advanceAmount').value=record?record.amount:'';
+  document.getElementById('advanceModal').classList.add('show');
+}
+function closeAdvanceModal(){document.getElementById('advanceModal').classList.remove('show');selectedAdvanceWorker=null;editingAdvanceId=null}
+function addAdvance(){
+  if(!selectedAdvanceWorker)return;
+  const date=document.getElementById('advanceDate').value,raw=document.getElementById('advanceAmount').value.trim(),amount=Number(raw);
+  if(!validAdvanceDate(date)){alert('请选择有效日期');return}
+  if(raw===''||!Number.isFinite(amount)||amount<=0||!/^\d+(\.\d{1,2})?$/.test(raw)){alert('请输入正确金额，最多两位小数');return}
+  const old=editingAdvanceId?advances.find(a=>a.id===editingAdvanceId && a.workerId===selectedAdvanceWorker):null;
+  if(editingAdvanceId&&!old){alert('原有预支记录不存在，请重新打开');return}
+  if(old&&(old.date.slice(0,7)!==date.slice(0,7)||old.amount!==amount)){
+    if(!confirm('这次修改可能影响本月及之后月份的应付工资和结转余额。确认修改？'))return;
+  }
+  if(old){old.date=date;old.amount=amount}
+  else advances.push({id:'adv'+Date.now()+'-'+Math.random().toString(36).slice(2,7),workerId:selectedAdvanceWorker,date,amount});
+  const activeWorker=selectedAdvanceWorker;
+  saveData();closeAdvanceModal();renderSalary();renderSummary();
+  if(ledgerWorkerId===activeWorker)renderAdvanceLedger();
+}
+function deleteAdvanceRecord(workerId,recordId){
+  const w=workers.find(x=>x.id===workerId),record=advances.find(a=>a.id===recordId && a.workerId===workerId);
+  if(!w||!record)return;
+  if(!confirm('确定删除 '+w.name+' 的这笔预支？\n'+record.date+'　RM '+money(record.amount)+'\n\n删除后会重新计算相关月份的结转余额。'))return;
+  advances=advances.filter(a=>a.id!==recordId);saveData();renderSalary();renderSummary();renderAdvanceLedger();
+}
+function showWorkerSalary(workerId,month){
+  if(!workers.some(w=>w.id===workerId))return;
+  ledgerWorkerId=workerId;ledgerMonth=month;
+  renderAdvanceLedger();document.getElementById('advanceLedgerModal').classList.add('show');
+}
+function closeAdvanceLedger(){
+  document.getElementById('advanceLedgerModal').classList.remove('show');ledgerWorkerId=null;ledgerMonth=null;
+}
+function renderAdvanceLedger(){
+  const w=workers.find(x=>x.id===ledgerWorkerId),month=ledgerMonth;
+  if(!w||!month)return;
+  const s=calculateSalary(w,month);
+  const records=advances.filter(a=>a.workerId===w.id&&a.date.slice(0,7)===month).slice().sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+  document.getElementById('advanceLedgerTitle').textContent=w.name+' · '+month+' 预支管理';
+  const safeId=JSON.stringify(w.id).replace(/"/g,'&quot;');
+  document.getElementById('advanceLedgerContent').innerHTML=`
+    <div class="adv-ledger">
+      <div class="adv-ledger-item"><span>本月工资</span><strong>RM ${money(s.totalEarnings)}</strong></div>
+      <div class="adv-ledger-item"><span>上月结转</span><strong>RM ${money(s.previousDebt)}</strong></div>
+      <div class="adv-ledger-item"><span>本月新增预支</span><strong>RM ${money(s.advance)}</strong></div>
+      <div class="adv-ledger-item adv-net"><span>本月实际应付</span><strong>RM ${money(s.net)}</strong></div>
+      <div class="adv-ledger-item adv-debt" style="grid-column:1/-1"><span>结转到下个月（尚欠预支）</span><strong>RM ${money(s.outstandingDebt)}</strong></div>
+    </div>
+    <div class="v5-toolbar" style="justify-content:space-between;margin:12px 0">
+      <b>本月预支明细（${records.length} 笔）</b>
+      <button class="btn-orange" onclick='openAdvanceModal(${safeId})'>＋ 新增预支</button>
+    </div>
+    ${records.length?records.map(a=>`<div class="adv-record"><div class="adv-record-main">${escapeHTML(a.date)}<b>RM ${money(a.amount)}</b></div><div class="adv-record-actions"><button class="btn-gray" onclick='openAdvanceModal(${safeId},${JSON.stringify(a.id).replace(/"/g,'&quot;')})'>编辑</button><button class="btn-red" onclick='deleteAdvanceRecord(${safeId},${JSON.stringify(a.id).replace(/"/g,'&quot;')})'>删除</button></div></div>`).join(''):'<div class="v5-muted">本月还没有新增预支。上月结转会继续显示在上方。</div>'}
+    <div class="adv-explain" style="margin:12px 0">核算：实际应付 = max(0，本月工资 − 上月结转 − 本月预支)；下月结转 = max(0，上月结转 + 本月预支 − 本月工资)。</div>
+    <button class="btn-gray" onclick='exportAdvancePDF(${safeId},${JSON.stringify(month).replace(/"/g,'&quot;')})'>📄 生成本月预支明细 PDF</button>`;
+}
+function renderSalary(){
+  const month=document.getElementById("salaryMonth").value||getMonth(),box=document.getElementById("salaryList");
+  if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
+  box.innerHTML=workers.map(w=>{
+    const s=calculateSalary(w,month);
+    const edited=Object.prototype.hasOwnProperty.call(salaryOverrides,w.id+"_"+month);
+    return `<div class="card">
+      <h2>${escapeHTML(w.name)}</h2>
+      <div class="grid">
+        <div class="stat"><div class="stat-title">出勤天数</div><div class="stat-value">${s.presentDays}</div></div>
+        <div class="stat"><div class="stat-title">OT 小时</div><div class="stat-value">${s.otHours}</div></div>
+        <div class="stat"><div class="stat-title">基本工资</div><div class="stat-value">RM ${money(s.basePay)}</div></div>
+        <div class="stat"><div class="stat-title">OT 工资</div><div class="stat-value">RM ${money(s.otPay)}</div></div>
+      </div>
+      <div style="margin-top:15px">
+        <div>本月工资：<span class="amount">RM ${money(s.totalEarnings)}</span>${edited?'<span class="small">（已手动修改）</span>':''}</div>
+        <div style="margin-top:6px">上月结转：<span class="amount">RM ${money(s.previousDebt)}</span></div>
+        <div style="margin-top:6px">本月新增预支：<span class="amount">RM ${money(s.advance)}</span></div>
+        <hr><div class="total">本月应付：RM ${money(s.net)}</div>
+        ${s.outstandingDebt>0?`<div style="margin-top:10px;padding:10px;background:#fff7ed;border-radius:8px;color:#c2410c;font-weight:bold">结转下个月：RM ${money(s.outstandingDebt)}</div>`:""}
+      </div>
+      <details class="v5-detail"><summary>查看工资及工地明细</summary>
+        <div class="v5-muted">工资 = ${s.presentDays} 天 × RM ${money(w.dailyRate)} + ${s.otHours}h × RM ${money(w.otRate)}。原有手动工资调整继续优先采用。</div>
+        <div class="v5-muted" style="margin-top:8px">本月预支：${advances.filter(a=>a.workerId===w.id&&a.date&&a.date.startsWith(month)).length} 笔</div>
+        <ul>${advances.filter(a=>a.workerId===w.id&&a.date&&a.date.startsWith(month)).map(a=>'<li>'+escapeHTML(a.date)+' — RM '+money(a.amount)+'</li>').join('')||'<li>无预支记录</li>'}</ul>
+        <div class="v5-muted">工地分配（按当前 Daily / OT 单价估算，未拆分手动调整）：</div>
+        <ul>${getSiteBreakdown(month,w.id).map(a=>'<li>'+escapeHTML(siteName(a.siteId))+'：'+a.days+' 天 / '+a.hours+'h / RM '+money(a.amount)+'</li>').join('')||'<li>本月无工地出勤</li>'}</ul>
+      </details>
+      <div style="margin-top:12px;display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-gray" onclick="editSalary('${w.id}','${month}')">✏️ 编辑工资</button>
+        <button class="btn-orange" onclick="openAdvanceModal('${w.id}')">＋ 添加预支</button>
+        <button class="btn-gray" onclick="showWorkerSalary('${w.id}','${month}')">预支管理 / 明细</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderSummary(){
+  const month=document.getElementById("summaryMonth").value||getMonth(),box=document.getElementById("summaryContent");
+  if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
+  let totalBase=0,totalOT=0,totalEarnings=0,totalPreviousDebt=0,totalAdvance=0,totalNet=0,totalOutstandingDebt=0;
+  const rows=workers.map(w=>{
+    const s=calculateSalary(w,month);
+    totalBase+=s.basePay;totalOT+=s.otPay;totalEarnings+=s.totalEarnings;totalPreviousDebt+=s.previousDebt;totalAdvance+=s.advance;totalNet+=s.net;totalOutstandingDebt+=s.outstandingDebt;
+    return `<tr><td><b>${escapeHTML(w.name)}</b></td><td>${s.presentDays}</td><td>${s.otHours}</td><td>RM ${money(s.basePay)}</td><td>RM ${money(s.otPay)}</td><td>RM ${money(s.totalEarnings)}</td><td>RM ${money(s.previousDebt)}</td><td>RM ${money(s.advance)}</td><td><b>RM ${money(s.net)}</b></td><td>${s.outstandingDebt>0?`<span style="color:#c2410c;font-weight:bold">RM ${money(s.outstandingDebt)}</span>`:"RM 0.00"}</td></tr>`;
+  }).join("");
+  box.innerHTML=`<div class="card"><div class="grid">
+    <div class="stat"><div class="stat-title">基本工资</div><div class="stat-value">RM ${money(totalBase)}</div></div>
+    <div class="stat"><div class="stat-title">OT 工资</div><div class="stat-value">RM ${money(totalOT)}</div></div>
+    <div class="stat"><div class="stat-title">总工资</div><div class="stat-value">RM ${money(totalEarnings)}</div></div>
+    <div class="stat"><div class="stat-title">本月预支</div><div class="stat-value">RM ${money(totalAdvance)}</div></div>
+  </div><div style="margin-top:15px;padding:12px;background:#f9fafb;border-radius:10px">
+    <div style="margin-bottom:8px">上月结转：<b>RM ${money(totalPreviousDebt)}</b></div>
+    <div style="margin-bottom:8px">本月预支：<b>RM ${money(totalAdvance)}</b></div>
+    <div style="margin-bottom:8px">实际应付：<b>RM ${money(totalNet)}</b></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;color:#c2410c;font-weight:bold">结转下个月：RM ${money(totalOutstandingDebt)}</div>
+  </div></div>
+  <div class="card"><h2>${month} 月尾结算</h2><div class="table-wrap"><table><thead><tr><th>工人</th><th>出勤</th><th>OT</th><th>基本</th><th>OT薪资</th><th>本月工资</th><th>上月结转</th><th>本月预支</th><th>应付</th><th>下月结转</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  const breakdown=getSiteBreakdown(month);
+  document.getElementById('siteMonthSummary').innerHTML=`<div class="card"><h2>🏗️ 各工地出勤 / 人工费统计</h2>
+    <div class="v5-muted">只是按目前工资单价分配工地成本，不改变月尾结算；手动调整、上月欠款和预支不分配到各工地。</div>
+    ${breakdown.length?`<div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>工地</th><th>出勤天数</th><th>OT (h)</th><th>估算工资</th></tr></thead><tbody>${breakdown.map(a=>`<tr><td>${escapeHTML(siteName(a.siteId))}</td><td>${a.days}</td><td>${a.hours}</td><td>RM ${money(a.amount)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="v5-muted" style="margin-top:10px">本月尚无工地出勤记录</div>'}
+  </div>`;
+}
+
+function renderPersonalWorkerOptions(){
+  const select=document.getElementById("personalWorker"),old=select.value;
+  select.innerHTML=workers.map(w=>`<option value="${w.id}">${escapeHTML(w.name)}</option>`).join("");
+  if(workers.some(w=>w.id===old))select.value=old;
+  else if(workers.length)select.value=workers[0].id;
+}
+function daysInMonth(month){
+  const [y,m]=month.split("-").map(Number);return new Date(y,m,0).getDate();
+}
+function renderPersonalAttendance(){
+  const box=document.getElementById("personalReport"),month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value;
+  if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
+  const w=workers.find(x=>x.id===workerId);if(!w)return;
+  let present=0,off=0,absent=0,ot=0,base=0,otPay=0,rows="";
+  for(let day=1;day<=daysInMonth(month);day++){
+    const date=month+"-"+String(day).padStart(2,"0"),d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+    if(d.status==="present"){present++;base+=Number(w.dailyRate)}
+    else if(d.status==="off")off++;else if(d.status==="absent")absent++;
+    ot+=Number(d.ot||0);otPay+=Number(d.ot||0)*Number(w.otRate);
+    const status=d.status==="present"?"出勤":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
+    const cls=d.status==="present"?"daily-present":d.status==="off"?"daily-off":d.status==="absent"?"daily-absent":"daily-unrecorded";
+    const dayPay=(d.status==="present"?Number(w.dailyRate):0)+(Number(d.ot||0)*Number(w.otRate));
+    rows+=`<tr><td>${date}</td><td class="${cls}">${status}</td><td>${Number(d.ot||0)}</td><td>RM ${money(dayPay)}</td></tr>`;
+  }
+  const calculated=base+otPay,key=w.id+"_"+month,finalSalary=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
+  box.innerHTML=`<div class="card print-area" id="personalPrintArea">
+    <div class="report-title"><h2>${escapeHTML(w.name)} — ${month} 个人日勤表</h2><div class="report-meta">Daily RM ${money(w.dailyRate)} · OT RM ${money(w.otRate)}/小时</div></div>
+    <div class="grid">
+      <div class="stat"><div class="stat-title">出勤</div><div class="stat-value">${present} 天</div></div>
+      <div class="stat"><div class="stat-title">休息</div><div class="stat-value">${off} 天</div></div>
+      <div class="stat"><div class="stat-title">缺勤</div><div class="stat-value">${absent} 天</div></div>
+      <div class="stat"><div class="stat-title">OT</div><div class="stat-value">${ot} 小时</div></div>
+    </div>
+    <div class="table-wrap" style="margin-top:15px"><table><thead><tr><th>日期</th><th>日勤</th><th>OT小时</th><th>当天工资</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="margin-top:15px;padding:12px;background:#f9fafb;border-radius:10px">
+      <div>基本工资：<b>RM ${money(base)}</b></div><div style="margin-top:6px">OT 工资：<b>RM ${money(otPay)}</b></div>
+      <div style="margin-top:6px">计算工资：<b>RM ${money(calculated)}</b></div>
+      <div style="margin-top:6px">最终本月工资：<b>RM ${money(finalSalary)}</b></div>
+    </div>
+  </div>
+  <div class="card no-print"><div class="report-actions">
+    <button class="btn-primary" onclick="printPersonal()">📄 生成 / 分享 PDF</button>
+    <button class="btn-green" onclick="copyPersonalReport()">📋 复制报告</button>
+    <button class="btn-purple" onclick="sharePersonalReport()">📤 分享报告</button>
+  </div></div>`;
+}
+  
+  function renderAttendanceSummary(){
+  const box=document.getElementById("attendanceSummaryContent");
+  const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
+
+  if(!workers.length){
+    box.innerHTML='<div class="card empty">还没有工人</div>';
+    return;
+  }
+
+  const totalDays=daysInMonth(month);
+
+  // 手机卡片
+  let mobileCards="";
+
+  workers.forEach(w=>{
+    let present=0;
+    let absent=0;
+    let unrecorded=0;
+    let dayCells="";
+
+    for(let day=1;day<=totalDays;day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{
+        status:"unrecorded",
+        ot:0
+      };
+
+      let symbol="?";
+      let cls="mobile-day-unrecorded";
+
+      if(d.status==="present"){
+        symbol="";
+        cls="mobile-day-present";
+        present++;
+      }else if(d.status==="absent"){
+        symbol="";
+        cls="mobile-day-absent";
+        absent++;
+      }else if(d.status==="off"){
+        symbol="";
+        cls="mobile-day-off";
+      }else{
+        unrecorded++;
+      }
+
+      if(d.status!=="off"){
+        dayCells+=`
+          <div class="mobile-day ${cls}">
+            <span>${day}</span>
+            <b>${symbol}</b>
+          </div>
+        `;
+      }
+    }
+
+    mobileCards+=`
+      <div class="attendance-worker-card">
+        <div class="attendance-worker-name">
+          ${escapeHTML(w.name)}
+        </div>
+
+        <div class="attendance-worker-stats">
+          <span>✓ 出勤 ${present} 天</span>
+          <span>✕ 缺勤 ${absent} 天</span>
+          <span>? 未记录 ${unrecorded} 天</span>
+        </div>
+
+        <div class="mobile-days">
+          ${dayCells}
+        </div>
+      </div>
+    `;
+  });
+
+  // 电脑 / PDF 完整表格
+  let head="<tr><th>工人</th>";
+
+  for(let day=1;day<=totalDays;day++){
+    head+=`<th>${day}</th>`;
+  }
+
+  head+="<th>出勤</th><th>缺勤</th><th>休息</th><th>未记录</th></tr>";
+
+  let rows="";
+
+  workers.forEach(w=>{
+    let present=0;
+    let absent=0;
+    let off=0;
+    let unrecorded=0;
+    let cells="";
+
+    for(let day=1;day<=totalDays;day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{
+        status:"unrecorded",
+        ot:0
+      };
+
+      let status="?";
+      let cls="daily-unrecorded";
+
+      if(d.status==="present"){
+        status="";
+        cls="daily-present";
+        present++;
+      }else if(d.status==="absent"){
+        status="";
+        cls="daily-absent";
+        absent++;
+      }else if(d.status==="off"){
+        status="休";
+        cls="daily-off";
+        off++;
+      }else{
+        unrecorded++;
+      }
+
+      const statusLabel=d.status==='present'?'出勤':d.status==='absent'?'缺勤':d.status==='off'?'休息':'未记录';
+      cells+=`<td class="${cls}" title="${statusLabel}" aria-label="${statusLabel}">${status}</td>`;
+    }
+
+    rows+=`
+      <tr>
+        <td><strong>${escapeHTML(w.name)}</strong></td>
+        ${cells}
+        <td><strong>${present}</strong></td>
+        <td>${absent}</td>
+        <td>${off}</td>
+        <td>${unrecorded}</td>
+      </tr>
+    `;
+  });
+
+  box.innerHTML=`
+    <div class="attendance-summary-mobile">
+      ${mobileCards}
+    </div>
+
+    <div class="card print-area attendance-summary-desktop" id="attendanceSummaryPrintArea">
+      <div class="report-title">
+        <h2>${month} 员工总体出勤表</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table class="attendance-summary-table">
+          <thead>${head}</thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+  function getAttendanceSummaryText(){
+  const month=document.getElementById("attendanceSummaryMonth").value||getMonth();
+  let text=`${month} 员工总体出勤表\n\n`;
+
+  workers.forEach(w=>{
+    let present=0,absent=0,off=0,unrecorded=0;
+    let dayCells="";
+    let daysText="";
+
+    for(let day=1;day<=daysInMonth(month);day++){
+      const date=month+"-"+String(day).padStart(2,"0");
+      const d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+
+      let status="?";
+
+      if(d.status==="present"){
+        status="✓";
+        present++;
+      }else if(d.status==="absent"){
+        status="✕";
+        absent++;
+      }else if(d.status==="off"){
+        status="休";
+        off++;
+      }else{
+        unrecorded++;
+      }
+
+      daysText+=`${String(day).padStart(2,"0")}${status} `;
+    }
+
+    text+=`${w.name}\n`;
+    text+=`${daysText}\n`;
+    text+=`出勤 ${present} 天｜缺勤 ${absent} 天｜休息 ${off} 天｜未记录 ${unrecorded} 天\n\n`;
+  });
+
+  return text.trim();
+}
+
+async function copyAttendanceSummary(){
+  try{
+    await navigator.clipboard.writeText(getAttendanceSummaryText());
+    alert("出勤表已经复制");
+  }catch(e){
+    alert("复制失败，请手动复制");
+  }
+}
+
+async function shareAttendanceSummary(){
+  const text=getAttendanceSummaryText();
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"员工总体出勤表",
+        text:text
+      });
+    }catch(e){}
+  }else{
+    await copyAttendanceSummary();
+  }
+}
+
+function printAttendanceSummary(){ openReportPreview("attendance-summary"); }
+function getPersonalReportText(){
+  const month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value,w=workers.find(x=>x.id===workerId);if(!w)return "";
+  let text=`${w.name} - ${month} 个人日勤表\nDaily RM ${money(w.dailyRate)} | OT RM ${money(w.otRate)}/小时\n\n`;
+  let present=0,off=0,absent=0,ot=0,base=0,otPay=0;
+  for(let day=1;day<=daysInMonth(month);day++){
+    const date=month+"-"+String(day).padStart(2,"0"),d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
+    const status=d.status==="present"?"出勤":d.status==="off"?"休息":d.status==="absent"?"缺勤":"未记录";
+    if(d.status==="present"){present++;base+=Number(w.dailyRate)}else if(d.status==="off")off++;else if(d.status==="absent")absent++;
+    ot+=Number(d.ot||0);otPay+=Number(d.ot||0)*Number(w.otRate);
+    const pay=(d.status==="present"?Number(w.dailyRate):0)+Number(d.ot||0)*Number(w.otRate);
+    text+=`${date}  ${status}  OT ${Number(d.ot||0)}h  RM ${money(pay)}\n`;
+  }
+  const calculated=base+otPay,key=w.id+"_"+month,final=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
+  text+=`\n出勤：${present}天\n休息：${off}天\n缺勤：${absent}天\nOT：${ot}小时\n基本工资：RM ${money(base)}\nOT工资：RM ${money(otPay)}\n本月工资：RM ${money(final)}`;
+  return text;
+}
+async function copyPersonalReport(){
+  const text=getPersonalReportText();if(!text)return;
+  try{await navigator.clipboard.writeText(text);alert("报告已复制，可以粘贴到 WhatsApp。")}
+  catch(e){prompt("复制下面的报告：",text)}
+}
+async function sharePersonalReport(){
+  const text=getPersonalReportText();if(!text)return;
+  if(navigator.share){try{await navigator.share({title:"个人日勤表",text});return}catch(e){if(e.name==="AbortError")return}}
+  await copyPersonalReport();
+}
+function printPersonal(){ openReportPreview("personal"); }
+  function getSummaryReportText(){
+  const month=document.getElementById("summaryMonth").value||getMonth();
+  if(!workers.length)return "";
+
+  let text=`${month} 月尾结算报告\n\n`;
+  let totalNet=0,totalEarnings=0,totalAdvance=0,totalDebt=0;
+
+  workers.forEach(w=>{
+    const s=calculateSalary(w,month);
+
+    totalEarnings+=s.totalEarnings;
+    totalAdvance+=s.advance;
+    totalNet+=s.net;
+    totalDebt+=s.outstandingDebt;
+
+    text+=
+      `${w.name}\n`+
+      `出勤：${s.presentDays} 天\n`+
+      `OT：${s.otHours} 小时\n`+
+      `本月工资：RM ${money(s.totalEarnings)}\n`+
+      `上月欠款：RM ${money(s.previousDebt)}\n`+
+      `本月预支：RM ${money(s.advance)}\n`+
+      `应付：RM ${money(s.net)}\n`+
+      `尚欠：RM ${money(s.outstandingDebt)}\n\n`;
+  });
+
+  text+=
+    `========== 总结 ==========\n`+
+    `总工资：RM ${money(totalEarnings)}\n`+
+    `本月预支：RM ${money(totalAdvance)}\n`+
+    `实际应付：RM ${money(totalNet)}\n`+
+    `尚欠预支：RM ${money(totalDebt)}`;
+
+  return text;
+}
+
+async function copySummaryReport(){
+  const text=getSummaryReportText();
+  if(!text)return;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("结算报告已复制，可以粘贴到 WhatsApp。");
+  }catch(e){
+    prompt("复制下面的结算报告：",text);
+  }
+}
+
+async function shareSummaryReport(){
+  const text=getSummaryReportText();
+  if(!text)return;
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"月尾结算报告",
+        text:text
+      });
+      return;
+    }catch(e){
+      if(e.name==="AbortError")return;
+    }
+  }
+
+  await copySummaryReport();
+}
+
+function printSummary(){ openReportPreview("summary"); }
+async function exportAdvancePDF(workerId,month){
+  ledgerWorkerId=workerId;ledgerMonth=month;
+  return openReportPreview('advance');
+}
+
+
+// PDF V4: self-contained canvas-drawn PDF pages; no external CDN or library.
+function pdfV4Pages(type){
+  const landscape=type!=='personal';
+  const W=landscape?1754:1240,H=landscape?1240:1754;
+  const margin=65, bottom=65;
+  const monthId={'summary':'summaryMonth','personal':'personalMonth','attendance-summary':'attendanceSummaryMonth'}[type];
+  if(!monthId && type!=='advance')throw new Error('未知报告类型');
+  const month=type==='advance'?ledgerMonth:(document.getElementById(monthId).value||getMonth());
+  const pages=[];
+  let canvas,ctx,y,page=0;
+  function startPage(){
+    canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+    ctx=canvas.getContext('2d',{alpha:false});
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#111827';ctx.font='bold 26px Arial, sans-serif';
+    ctx.fillText('Site Daily Record',margin,56);
+    ctx.font='22px Arial, PingFang SC, sans-serif';
+    const titles={'summary':'月尾结算报告','personal':'个人日勤表','attendance-summary':'员工总体出勤表','advance':'工人预支明细'};
+    ctx.fillText(month+' '+titles[type],margin,91);
+    ctx.strokeStyle='#cbd5e1';ctx.beginPath();ctx.moveTo(margin,107);ctx.lineTo(W-margin,107);ctx.stroke();
+    y=128;page++;
+  }
+  function finishPage(){
+    ctx.fillStyle='#64748b';ctx.font='16px Arial, sans-serif';
+    ctx.fillText('Site Daily Record  |  '+month,margin,H-25);
+    ctx.textAlign='right';ctx.fillText('Page '+page,W-margin,H-25);ctx.textAlign='left';
+    pages.push(canvas.toDataURL('image/jpeg',0.88).split(',')[1]);
+  }
+  function line(text,size=19){
+    if(y+size+12>H-bottom){finishPage();startPage()}
+    ctx.fillStyle='#111827';ctx.font=size+'px Arial, PingFang SC, sans-serif';
+    ctx.fillText(String(text),margin,y);y+=size+15;
+  }
+  function table(head,rows,ratios,opts={}){
+    const rowH=opts.rowH||43,font=opts.font||18;
+    const usable=W-2*margin, total=ratios.reduce((a,b)=>a+b,0);
+    const widths=ratios.map(v=>usable*v/total);
+    const positions=[margin];widths.forEach(v=>positions.push(positions[positions.length-1]+v));
+    function row(values,header){
+      if(y+rowH>H-bottom){finishPage();startPage();if(!header)row(head,true)}
+      ctx.fillStyle=header?'#e8edf5':'#ffffff';ctx.fillRect(margin,y,usable,rowH);
+      ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;
+      ctx.strokeRect(margin,y,usable,rowH);
+      ctx.fillStyle='#111827';ctx.font=(header?'bold ':'')+font+'px Arial, PingFang SC, sans-serif';
+      values.forEach((v,i)=>{
+        const left=positions[i],right=positions[i+1];
+        const coloredAttendance=!header&&opts.attendanceColors&&i>=1&&i<=opts.attendanceDays&&(v==='P'||v==='A');
+        if(coloredAttendance){
+          // Use a filled cell, not the P/A letters, on the generated offline PDF.
+          ctx.fillStyle=v==='P'?'#06b6d4':'#ef4444';
+          ctx.fillRect(left+1,y+1,right-left-2,rowH-2);
+        }
+        if(i) {ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(left,y+rowH);ctx.stroke()}
+        ctx.fillStyle='#111827';
+        const value=coloredAttendance?'':String(v==null?'':v);
+        ctx.save();ctx.beginPath();ctx.rect(left+5,y+2,right-left-10,rowH-4);ctx.clip();
+        ctx.textBaseline='middle';
+        if(i===0){ctx.textAlign='left';ctx.fillText(value,left+8,y+rowH/2)}
+        else{ctx.textAlign='center';ctx.fillText(value,(left+right)/2,y+rowH/2)}
+        ctx.restore();
+      });
+      y+=rowH;
+    }
+    row(head,true);rows.forEach(v=>row(v,false));y+=16;
+  }
+  startPage();
+  if(type==='summary'){
+    const head=['工人','出勤','本月工资 RM','预支 RM','实际应付 RM','OT (h)'];
+    let days=0,earn=0,adv=0,net=0,ot=0;
+    const rows=workers.map(w=>{
+      const s=calculateSalary(w,month);
+      days+=s.presentDays;earn+=s.totalEarnings;adv+=s.advance;net+=s.net;ot+=s.otHours;
+      return [w.name,s.presentDays,money(s.totalEarnings),money(s.advance),money(s.net),s.otHours];
+    });
+    rows.push(['TOTAL',days,money(earn),money(adv),money(net),ot]);
+    table(head,rows,[33,12,25,20,25,13],{font:20,rowH:52});
+    line('预支结转明细（自动结转，不重复算作新预支）',19);
+    const carryRows=workers.map(w=>{const s=calculateSalary(w,month);return [w.name,money(s.previousDebt),money(s.advance),money(s.outstandingDebt)]});
+    carryRows.push(['TOTAL',money(workers.reduce((v,w)=>v+calculateSalary(w,month).previousDebt,0)),money(adv),money(workers.reduce((v,w)=>v+calculateSalary(w,month).outstandingDebt,0))]);
+    table(['工人','上月结转 RM','本月预支 RM','下月结转 RM'],carryRows,[35,20,20,25],{font:18,rowH:43});
+  }else if(type==='advance'){
+    const w=workers.find(w=>w.id===ledgerWorkerId);
+    if(!w)throw new Error('找不到工人');
+    const s=calculateSalary(w,month);
+    line('工人：'+w.name+'    月份：'+month,22);
+    table(['项目','金额 RM'],[
+      ['本月工资',money(s.totalEarnings)],['上月结转',money(s.previousDebt)],
+      ['本月新增预支',money(s.advance)],['本月实际应付',money(s.net)],
+      ['结转下个月',money(s.outstandingDebt)]
+    ],[60,40],{font:19,rowH:50});
+    y+=16;
+    line('本月预支逐笔记录',22);
+    const rec=advances.filter(a=>a.workerId===w.id&&a.date.slice(0,7)===month).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    table(['日期','金额 RM'],rec.length?rec.map(a=>[a.date,money(a.amount)]):[['无新增预支','0.00']],[60,40],{font:19,rowH:48});
+    line('下月结转 = max(0，上月结转 + 本月预支 − 本月工资)',18);
+  }else if(type==='attendance-summary'){
+    const days=daysInMonth(month);
+    // Show the same full-cell colors in the legend as in the attendance grid.
+    ctx.fillStyle='#06b6d4';ctx.fillRect(margin,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.font='19px Arial, PingFang SC, sans-serif';ctx.fillText('出勤',margin+33,y);
+    ctx.fillStyle='#ef4444';ctx.fillRect(margin+123,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.fillText('缺勤',margin+156,y);
+    ctx.fillText('O = 休息    - = 未记录',margin+270,y);y+=37;
+    const head=['工人',...Array.from({length:days},(_,i)=>String(i+1)),'出勤','缺勤','休息','未记'];
+    const rows=workers.map(w=>{
+      let present=0,absent=0,off=0,unrecorded=0;
+      const values=Array.from({length:days},(_,i)=>{
+        const date=month+'-'+String(i+1).padStart(2,'0');
+        const status=getAttendance(w.id,date).status;
+        if(status==='present'){present++;return 'P'}
+        if(status==='absent'){absent++;return 'A'}
+        if(status==='off'){off++;return 'O'}
+        unrecorded++;return '-';
+      });
+      return [w.name,...values,present,absent,off,unrecorded];
+    });
+    table(head,rows,[7,...Array(days).fill(1),2,2,2,2],{font:14,rowH:44,attendanceColors:true,attendanceDays:days});
+  }else{
+    const id=document.getElementById('personalWorker').value;
+    const w=workers.find(v=>v.id===id);
+    if(!w)throw new Error('请选择工人');
+    line('工人: '+w.name+'     Daily RM '+money(w.dailyRate)+'     OT RM '+money(w.otRate)+'/h',20);
+    let present=0,off=0,absent=0,ot=0,base=0,otPay=0;
+    const rows=[];
+    for(let day=1;day<=daysInMonth(month);day++){
+      const date=month+'-'+String(day).padStart(2,'0'),d=getAttendance(w.id,date);
+      if(d.status==='present'){present++;base+=Number(w.dailyRate)}
+      else if(d.status==='off')off++;else if(d.status==='absent')absent++;
+      const hours=Number(d.ot||0);ot+=hours;otPay+=hours*Number(w.otRate);
+      const label={present:'出勤',absent:'缺勤',off:'休息',unrecorded:'未记录'}[d.status]||'未记录';
+      rows.push([date,label,hours,money((d.status==='present'?Number(w.dailyRate):0)+hours*Number(w.otRate))]);
+    }
+    table(['日期','日勤','OT (h)','当天工资 RM'],rows,[35,25,20,35],{font:19,rowH:41});
+    const key=w.id+'_'+month;
+    const total=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):base+otPay;
+    line('出勤 '+present+' 天     休息 '+off+' 天     缺勤 '+absent+' 天     OT '+ot+' 小时',20);
+    line('基本 RM '+money(base)+'     OT RM '+money(otPay)+'     本月工资 RM '+money(total),20);
+  }
+  finishPage();
+  return {pages,W,H,month};
+}
+function pdfV4Build(pages,W,H){
+  // Each page contains one JPEG of a report drawn directly with Canvas.
+  const encoder=new TextEncoder(),chunks=[],offsets=[0];let length=0;
+  function add(bytes){chunks.push(bytes);length+=bytes.length}
+  function ascii(v){add(encoder.encode(v))}
+  function base64Bytes(str){
+    const binary=atob(str),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return bytes;
+  }
+  function object(id,parts){offsets[id]=length;ascii(id+' 0 obj\n');parts();ascii('\nendobj\n')}
+  ascii('%PDF-1.4\n%PDF-V4\n');
+  const n=pages.length;
+  object(1,()=>ascii('<< /Type /Catalog /Pages 2 0 R >>'));
+  object(2,()=>ascii('<< /Type /Pages /Count '+n+' /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ') +'] >>'));
+  for(let i=0;i<n;i++){
+    const id=3+i*3,imageId=id+1,contentId=id+2;
+    const pageW=W>H?841.89:595.28,pageH=W>H?595.28:841.89;
+    object(id,()=>ascii('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW+' '+pageH+'] /Resources << /XObject << /Im1 '+imageId+' 0 R >> >> /Contents '+contentId+' 0 R >>'));
+    const jpeg=base64Bytes(pages[i]);
+    object(imageId,()=>{ascii('<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpeg.length+' >>\nstream\n');add(jpeg);ascii('\nendstream')});
+    const stream='q\n'+pageW+' 0 0 '+pageH+' 0 0 cm\n/Im1 Do\nQ\n';
+    object(contentId,()=>ascii('<< /Length '+encoder.encode(stream).length+' >>\nstream\n'+stream+'endstream'));
+  }
+  const xref=length,count=3+n*3;
+  ascii('xref\n0 '+count+'\n0000000000 65535 f \n');
+  for(let i=1;i<count;i++)ascii(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+  ascii('trailer\n<< /Size '+count+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  return new Blob(chunks,{type:'application/pdf'});
+}
+async function openReportPreview(type){
+  if(!workers.length){alert('请先添加工人');return}
+  const button=document.activeElement;
+  const oldText=button&&button.tagName==='BUTTON'?button.textContent:null;
+  if(oldText!==null){button.disabled=true;button.textContent='⏳ 正在生成 PDF…'}
+  try{
+    const result=pdfV4Pages(type);
+    const blob=pdfV4Build(result.pages,result.W,result.H);
+    const filename='Site-Daily-Record-'+type+'-'+result.month+(type==='advance'&&ledgerWorkerId?'-'+String(ledgerWorkerId).replace(/[^a-zA-Z0-9_-]/g,''):'')+'.pdf';
+    const file=new File([blob],filename,{type:'application/pdf'});
+    // iOS installed web apps generally handle file sharing more reliably than synthetic downloads.
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:filename});return}
+      catch(e){if(e.name==='AbortError')return;console.warn('PDF share unavailable',e)}
+    }
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=url;link.download=filename;
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){console.error('PDF export failed',e);alert('PDF 生成失败：'+(e&&e.message||e))}
+  finally{if(oldText!==null){button.disabled=false;button.textContent=oldText}}
+}
+
+// V5: user-exportable, portable JSON backup. No automatic data upload or cloud sync.
+function currentPayload(){
+  return {app:'Site Daily Record',schemaVersion:5.1,exportedAt:new Date().toISOString(),data:{workers,attendance,advances,salaryOverrides,sites}};
+}
+function refreshBackupStatus(){
+  const target=document.getElementById('backupStatus');if(!target)return;
+  const dates=Object.keys(attendance).filter(k=>/^\d{4}-\d{2}-\d{2}_/.test(k));
+  if(storageReadErrors.length){target.textContent='⚠️ 有原始资料读取失败：'+storageReadErrors.join('、')+'。请勿继续编辑，先导出备份或联络协助。';return}
+  target.textContent=(TEST_MODE?'测试储存空间 · ':'目前本机资料 · ')+workers.length+' 位工人 · '+dates.length+' 条日勤 · '+advances.length+' 笔预支 · '+Object.keys(salaryOverrides).length+' 条工资修改 · '+sites.length+' 个工地。'+(backupExportedThisSession?' 已启动备份导出。':' 建议先点「备份全部资料」。');
+}
+function saveBlob(blob,name){
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=name;document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function exportBackup(){
+  try{
+    const fileName='Site-Daily-Record-Backup-'+getToday()+(TEST_MODE?'-TEST':'')+'.json';
+    const blob=new Blob([JSON.stringify(currentPayload(),null,2)],{type:'application/json'});
+    const file=new File([blob],fileName,{type:'application/json'});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:'Site Daily Record 完整备份'});backupExportedThisSession=true;refreshBackupStatus();return}
+      catch(e){if(e.name==='AbortError')return;console.warn('分享失败，尝试下载',e)}
+    }
+    saveBlob(blob,fileName);backupExportedThisSession=true;refreshBackupStatus();
+    alert('备份已发起下载，请检查 iPhone「文件」或下载项目里是否真的保存了 .json 文件。');
+  }catch(e){console.error(e);alert('备份失败：'+(e.message||e))}
+}
+function validBackup(data){
+  if(!data || !Array.isArray(data.workers) || !Array.isArray(data.advances) || !data.attendance || typeof data.attendance!=='object' || Array.isArray(data.attendance) || !data.salaryOverrides || typeof data.salaryOverrides!=='object' || Array.isArray(data.salaryOverrides))return false;
+  if(!Array.isArray(data.sites))data.sites=[];
+  const hasId=x=>x&&typeof x==='object'&&typeof x.id==='string'&&x.id.length>0;
+  const validMoney=v=>Number.isFinite(Number(v))&&Number(v)>=0;
+  if(!data.workers.every(w=>hasId(w)&&typeof w.name==='string'&&validMoney(w.dailyRate)&&validMoney(w.otRate)))return false;
+  if(!data.advances.every(a=>hasId(a)&&typeof a.workerId==='string'&&typeof a.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(a.date)&&validMoney(a.amount)))return false;
+  if(!data.sites.every(s=>hasId(s)&&typeof s.name==='string'))return false;
+  if(!Object.entries(data.attendance).every(([k,v])=>/^\d{4}-\d{2}-\d{2}_.+/.test(k)&&v&&typeof v==='object'&&['present','absent','off','unrecorded'].includes(v.status)&&validMoney(v.ot||0)))return false;
+  if(!Object.values(data.salaryOverrides).every(validMoney))return false;
+  return true;
+}
+async function restoreBackupFromInput(input){
+  const file=input.files&&input.files[0];input.value='';if(!file)return;
+  if(file.size>10*1024*1024){alert('文件过大，请检查备份文件');return}
+  try{
+    const raw=JSON.parse(await file.text());
+    if(!raw || raw.app!=='Site Daily Record' || !raw.data || !validBackup(raw.data))throw new Error('不是有效的 Site Daily Record 备份');
+    const d=raw.data;
+    if(!backupExportedThisSession){alert('为了防止覆盖旧资料，请先点击「备份全部资料」，并确认已保存备份 JSON 文件，再导入。');return}
+    if(!confirm('确认恢复此备份？\n\n备份包含：'+d.workers.length+' 位工人、'+Object.keys(d.attendance).length+' 条日勤、'+d.advances.length+' 笔预支。\n\n这将替换本版本当前的资料。'))return;
+    // Keep a complete pre-restore snapshot before replacing the original V4 keys.
+    const before=storeKeys.map(k=>localStorage.getItem(k));
+    try{
+      localStorage.setItem(RECOVERY_KEY,JSON.stringify(currentPayload()));
+    }catch(e){alert('无法安全建立恢复点（储存空间不足）。请先释放空间，原有资料未修改。');return}
+    const next=[d.workers,d.attendance,d.advances,d.salaryOverrides,d.sites].map(JSON.stringify);
+    try{storeKeys.forEach((k,i)=>localStorage.setItem(k,next[i]));}
+    catch(e){storeKeys.forEach((k,i)=>{try{before[i]===null?localStorage.removeItem(k):localStorage.setItem(k,before[i])}catch(_){}});throw e}
+    workers=d.workers;attendance=d.attendance;advances=d.advances;salaryOverrides=d.salaryOverrides;sites=d.sites;
+    refreshBackupStatus();renderWorkers();renderAttendance();renderSalary();renderSummary();renderPersonalWorkerOptions();renderPersonalAttendance();renderAttendanceSummary();
+    alert('备份恢复成功。恢复前资料另有一个本机恢复点，但仍请妥善保留外部 JSON 文件。');
+  }catch(e){console.error('恢复失败',e);alert('恢复失败：'+(e.message||e)+'。旧资料没有被主动清除。')}
+}
+
+
+function init(){
+  document.getElementById("attendanceDate").value=getToday();
+  document.getElementById("salaryMonth").value=getMonth();
+  document.getElementById("summaryMonth").value=getMonth();
+ 
+  document.getElementById("personalMonth").value=getMonth();
+  document.getElementById("attendanceSummaryMonth").value=getMonth();
+  if(TEST_MODE)document.body.classList.add('test-mode');
+  renderWorkers();renderPersonalWorkerOptions();refreshBackupStatus();
+}
+init();
+</script>
+
+<script>
+if(document.documentElement.dataset.testMode!=='true' && "serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/Site-daily-record/sw.js").then(reg=>reg.update()).catch(()=>{}));
+}
+</script>
+</body>
+</html>

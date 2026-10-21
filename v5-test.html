@@ -92,13 +92,13 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
   }
 
   .mobile-day-present{
-    background:#dcfce7;
-    color:#166534;
+    background:#06b6d4;
+    color:#073642;
   }
 
   .mobile-day-absent{
-    background:#fee2e2;
-    color:#991b1b;
+    background:#ef4444;
+    color:#ffffff;
   }
 
   .mobile-day-unrecorded{
@@ -129,6 +129,10 @@ label{display:block;margin-bottom:12px;font-size:14px;font-weight:bold}
 .report-title{text-align:center;margin-bottom:12px}.report-meta{text-align:center;color:#6b7280;font-size:13px;margin-bottom:15px}
 .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
 .daily-present{color:#166534;font-weight:bold}.daily-off{color:#92400e}.daily-absent{color:#991b1b}.daily-unrecorded{color:#6b7280;font-weight:bold}
+/* V5.0 总出勤：出勤整格青色，缺勤整格红色（屏幕及打印）。 */
+.attendance-summary-table td.daily-present{background:#06b6d4!important;color:#073642!important}
+.attendance-summary-table td.daily-absent{background:#ef4444!important;color:#ffffff!important}
+.attendance-summary-table td.daily-present,.attendance-summary-table td.daily-absent{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 @media print{
   body{background:white;padding:0}.no-print,header,.bottom-nav{display:none!important}.print-area{display:block!important}
   .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}.container{max-width:none;padding:0}
@@ -747,11 +751,11 @@ function renderPersonalAttendance(){
       let cls="mobile-day-unrecorded";
 
       if(d.status==="present"){
-        symbol="✓";
+        symbol="";
         cls="mobile-day-present";
         present++;
       }else if(d.status==="absent"){
-        symbol="✕";
+        symbol="";
         cls="mobile-day-absent";
         absent++;
       }else if(d.status==="off"){
@@ -819,11 +823,11 @@ function renderPersonalAttendance(){
       let cls="daily-unrecorded";
 
       if(d.status==="present"){
-        status="✓";
+        status="";
         cls="daily-present";
         present++;
       }else if(d.status==="absent"){
-        status="✕";
+        status="";
         cls="daily-absent";
         absent++;
       }else if(d.status==="off"){
@@ -834,7 +838,8 @@ function renderPersonalAttendance(){
         unrecorded++;
       }
 
-      cells+=`<td class="${cls}">${status}</td>`;
+      const statusLabel=d.status==='present'?'出勤':d.status==='absent'?'缺勤':d.status==='off'?'休息':'未记录';
+      cells+=`<td class="${cls}" title="${statusLabel}" aria-label="${statusLabel}">${status}</td>`;
     }
 
     rows+=`
@@ -1075,8 +1080,15 @@ function pdfV4Pages(type){
       ctx.fillStyle='#111827';ctx.font=(header?'bold ':'')+font+'px Arial, PingFang SC, sans-serif';
       values.forEach((v,i)=>{
         const left=positions[i],right=positions[i+1];
+        const coloredAttendance=!header&&opts.attendanceColors&&i>=1&&i<=opts.attendanceDays&&(v==='P'||v==='A');
+        if(coloredAttendance){
+          // Use a filled cell, not the P/A letters, on the generated offline PDF.
+          ctx.fillStyle=v==='P'?'#06b6d4':'#ef4444';
+          ctx.fillRect(left+1,y+1,right-left-2,rowH-2);
+        }
         if(i) {ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(left,y+rowH);ctx.stroke()}
-        const value=String(v==null?'':v);
+        ctx.fillStyle='#111827';
+        const value=coloredAttendance?'':String(v==null?'':v);
         ctx.save();ctx.beginPath();ctx.rect(left+5,y+2,right-left-10,rowH-4);ctx.clip();
         ctx.textBaseline='middle';
         if(i===0){ctx.textAlign='left';ctx.fillText(value,left+8,y+rowH/2)}
@@ -1101,7 +1113,12 @@ function pdfV4Pages(type){
     line('上月欠款及尚欠预支请参考 App 内结算详情',19);
   }else if(type==='attendance-summary'){
     const days=daysInMonth(month);
-    line('P = 出勤     A = 缺勤     O = 休息     - = 未记录',19);
+    // Show the same full-cell colors in the legend as in the attendance grid.
+    ctx.fillStyle='#06b6d4';ctx.fillRect(margin,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.font='19px Arial, PingFang SC, sans-serif';ctx.fillText('出勤',margin+33,y);
+    ctx.fillStyle='#ef4444';ctx.fillRect(margin+123,y-17,23,23);
+    ctx.fillStyle='#111827';ctx.fillText('缺勤',margin+156,y);
+    ctx.fillText('O = 休息    - = 未记录',margin+270,y);y+=37;
     const head=['工人',...Array.from({length:days},(_,i)=>String(i+1)),'出勤','缺勤','休息','未记'];
     const rows=workers.map(w=>{
       let present=0,absent=0,off=0,unrecorded=0;
@@ -1115,7 +1132,7 @@ function pdfV4Pages(type){
       });
       return [w.name,...values,present,absent,off,unrecorded];
     });
-    table(head,rows,[7,...Array(days).fill(1),2,2,2,2],{font:14,rowH:44});
+    table(head,rows,[7,...Array(days).fill(1),2,2,2,2],{font:14,rowH:44,attendanceColors:true,attendanceDays:days});
   }else{
     const id=document.getElementById('personalWorker').value;
     const w=workers.find(v=>v.id===id);

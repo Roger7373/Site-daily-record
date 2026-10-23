@@ -181,6 +181,21 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 .adv-explain{font-size:12px;color:#64748b;line-height:1.55}
 #advanceLedgerModal .modal-box{max-width:550px}
 @media(max-width:380px){.adv-record{flex-wrap:wrap}.adv-record-actions{width:100%;justify-content:flex-end}}
+
+/* Compact V5.2 personal report: colored daily cells; detailed pay table remains expandable. */
+.personal-day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:12px 0}
+.personal-day-square{min-width:0;border-radius:7px;text-align:center;padding:7px 1px 6px;background:#e5e7eb;color:#374151;font-size:11px;min-height:48px}
+.personal-day-square b{display:block;font-size:16px;margin-bottom:3px}
+.personal-day-square.day-present{background:#06b6d4;color:#073642}
+.personal-day-square.day-half{background:#f5ce55;color:#5b4300}
+.personal-day-square.day-absent{background:#ef4444;color:#fff}
+.personal-day-square.day-off{background:#fff;border:1px solid #e5e7eb;color:#64748b}
+.personal-day-square.day-unrecorded{background:#e5e7eb;color:#374151}
+.personal-summary-amount{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #edf2f7;font-size:14px}
+.personal-summary-amount strong{white-space:nowrap}
+.personal-summary-amount.personal-net{font-size:17px;font-weight:bold;border-top:2px solid #94a3b8;margin-top:7px;padding-top:10px;color:#15803d}
+.personal-summary-amount.personal-carry{color:#c2410c}
+@media(min-width:700px){.personal-day-grid{grid-template-columns:repeat(10,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -772,7 +787,7 @@ function renderPersonalAttendance(){
   const box=document.getElementById("personalReport"),month=document.getElementById("personalMonth").value||getMonth(),workerId=document.getElementById("personalWorker").value;
   if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
   const w=workers.find(x=>x.id===workerId);if(!w)return;
-  let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0,rows="";
+  let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0,rows="",dayCells="";
   for(let day=1;day<=daysInMonth(month);day++){
     const date=month+"-"+String(day).padStart(2,"0"),d=attendance[getAttendanceKey(date,w.id)]||{status:"unrecorded",ot:0};
     if(d.status==="present"){present++;base+=Number(w.dailyRate)}
@@ -783,8 +798,12 @@ function renderPersonalAttendance(){
     const cls=d.status==="present"?"daily-present":d.status==="half"?"daily-half":d.status==="off"?"daily-off":d.status==="absent"?"daily-absent":"daily-unrecorded";
     const dayPay=(d.status==="present"?Number(w.dailyRate):d.status==="half"?Number(w.dailyRate)*0.5:0)+(Number(d.ot||0)*Number(w.otRate));
     rows+=`<tr><td>${date}</td><td class="${cls}">${status}</td><td>${Number(d.ot||0)}</td><td>RM ${money(dayPay)}</td></tr>`;
+    const shortStatus={present:'出勤',half:'半天',absent:'缺勤',off:'休息',unrecorded:'未记'}[d.status]||'未记';
+    const dayClass={present:'day-present',half:'day-half',absent:'day-absent',off:'day-off',unrecorded:'day-unrecorded'}[d.status]||'day-unrecorded';
+    dayCells+=`<div class="personal-day-square ${dayClass}" title="${date} · ${status} · OT ${Number(d.ot||0)}h"><b>${day}</b>${shortStatus}${Number(d.ot||0)>0?`<div>OT ${Number(d.ot||0)}h</div>`:''}</div>`;
   }
   const calculated=base+otPay,key=w.id+"_"+month,finalSalary=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
+  const s=calculateSalary(w,month);
   box.innerHTML=`<div class="card print-area" id="personalPrintArea">
     <div class="report-title"><h2>${escapeHTML(w.name)} — ${month} 个人日勤表</h2><div class="report-meta">Daily RM ${money(w.dailyRate)} · OT RM ${money(w.otRate)}/小时</div></div>
     <div class="grid">
@@ -794,12 +813,20 @@ function renderPersonalAttendance(){
       <div class="stat"><div class="stat-title">缺勤</div><div class="stat-value">${absent} 天</div></div>
       <div class="stat"><div class="stat-title">OT</div><div class="stat-value">${ot} 小时</div></div>
     </div>
-    <div class="table-wrap" style="margin-top:15px"><table class="personal-attendance-table"><thead><tr><th>日期</th><th>日勤</th><th>OT小时</th><th>当天工资</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="v5-muted" style="margin-top:12px">青色出勤 · 黄色半天 · 红色缺勤 · 白色休息 · 灰色未记录；有 OT 的日期会标出小时。</div>
+    <div class="personal-day-grid">${dayCells}</div>
+    <details class="v5-detail"><summary>查看每天 OT / 当天工资明细</summary>
+      <div class="table-wrap" style="margin-top:10px"><table class="personal-attendance-table"><thead><tr><th>日期</th><th>日勤</th><th>OT小时</th><th>当天工资</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </details>
     <div style="margin-top:15px;padding:12px;background:#f9fafb;border-radius:10px">
-      <div>折算出勤：<b>${present+half*0.5} 天</b>（全天 ${present} · 半天 ${half}）</div>
-      <div style="margin-top:6px">基本工资：<b>RM ${money(base)}</b></div><div style="margin-top:6px">OT 工资：<b>RM ${money(otPay)}</b></div>
-      <div style="margin-top:6px">计算工资：<b>RM ${money(calculated)}</b></div>
-      <div style="margin-top:6px">最终本月工资：<b>RM ${money(finalSalary)}</b></div>
+      <div>折算出勤：<b>${s.presentDays} 天</b>（全天 ${present} · 半天 ${half}）　OT：<b>${s.otHours} h</b></div>
+      <div class="personal-summary-amount"><span>Basic Pay · 基本工资</span><strong>RM ${money(s.basePay)}</strong></div>
+      <div class="personal-summary-amount"><span>OT Pay · 加班工资</span><strong>RM ${money(s.otPay)}</strong></div>
+      <div class="personal-summary-amount"><span>Gross Salary · 本月工资${Object.prototype.hasOwnProperty.call(salaryOverrides,key)?'（已手动调整）':''}</span><strong>RM ${money(s.totalEarnings)}</strong></div>
+      <div class="personal-summary-amount"><span>Previous Balance · 上月结转</span><strong>RM ${money(s.previousDebt)}</strong></div>
+      <div class="personal-summary-amount"><span>Advance · 本月预支</span><strong>RM ${money(s.advance)}</strong></div>
+      <div class="personal-summary-amount personal-net"><span>Net Pay · 实际应付</span><strong>RM ${money(s.net)}</strong></div>
+      <div class="personal-summary-amount personal-carry"><span>Carry Forward · 下月结转</span><strong>RM ${money(s.outstandingDebt)}</strong></div>
     </div>
   </div>
   <div class="card no-print"><div class="report-actions">
@@ -1054,7 +1081,8 @@ function getPersonalReportText(){
     text+=`${date}  ${status}  OT ${Number(d.ot||0)}h  RM ${money(pay)}\n`;
   }
   const calculated=base+otPay,key=w.id+"_"+month,final=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
-  text+=`\n出勤：${present}天\n半天：${half}天\n折算出勤：${present+half*0.5}天\n休息：${off}天\n缺勤：${absent}天\nOT：${ot}小时\n基本工资：RM ${money(base)}\nOT工资：RM ${money(otPay)}\n本月工资：RM ${money(final)}`;
+  const s=calculateSalary(w,month);
+  text+=`\n出勤：${present}天\n半天：${half}天\n折算出勤：${s.presentDays}天\n休息：${off}天\n缺勤：${absent}天\nOT：${s.otHours}小时\n基本工资：RM ${money(s.basePay)}\nOT工资：RM ${money(s.otPay)}\n本月工资：RM ${money(s.totalEarnings)}\n上月结转：RM ${money(s.previousDebt)}\n本月预支：RM ${money(s.advance)}\n实际应付：RM ${money(s.net)}\n下月结转：RM ${money(s.outstandingDebt)}`;
   return text;
 }
 async function copyPersonalReport(){
@@ -1264,26 +1292,97 @@ function pdfV4Pages(type){
     });
     table(head,rows,[8,...Array(days).fill(1),3,2,3,2,4],{font:14,rowH:44,attendanceColors:true,attendanceDays:days});
   }else{
+    // Compact personal PDF: day grid + transparent month reconciliation.
+    // Attendance, half days, overtime, salary overrides, and advance carry-forward
+    // all use the same source records and calculateSalary() as the Salary tab.
     const id=document.getElementById('personalWorker').value;
     const w=workers.find(v=>v.id===id);
     if(!w)throw new Error('Please select a worker');
-    line('Worker: '+w.name+'     Daily Rate: RM '+money(w.dailyRate)+'     OT: RM '+money(w.otRate)+'/hr',20);
-    let present=0,half=0,off=0,absent=0,ot=0,base=0,otPay=0;
-    const rows=[];
+    const s=calculateSalary(w,month);
+    line('Worker: '+w.name+'     Daily: RM '+money(w.dailyRate)+'     OT: RM '+money(w.otRate)+'/hr',21);
+    y+=10;
+    ctx.fillStyle='#111827';ctx.font='bold 24px Arial, sans-serif';ctx.fillText('Daily Attendance  |  1 - '+daysInMonth(month),margin,y);y+=26;
+    const legend=[
+      ['#06b6d4','Present'],['#f5ce55','Half Day'],['#ef4444','Absent'],
+      ['#ffffff','Day Off'],['#e5e7eb','Not Recorded']
+    ];
+    let lx=margin;
+    legend.forEach(([color,label])=>{
+      ctx.fillStyle=color;ctx.fillRect(lx,y,19,19);
+      ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.strokeRect(lx,y,19,19);
+      ctx.fillStyle='#334155';ctx.font='17px Arial, sans-serif';ctx.fillText(label,lx+25,y+16);
+      lx+=label==='Not Recorded'?0:label==='Half Day'?155:label==='Day Off'?145:label==='Present'?149:135;
+    });
+    y+=42;
+    const columns=10,gap=8,usable=W-2*margin,cellW=(usable-gap*(columns-1))/columns,cellH=82;
+    const gridTop=y;
+    const otRecords=[];
+    let present=0,half=0,off=0,absent=0,unrecorded=0;
     for(let day=1;day<=daysInMonth(month);day++){
-      const date=month+'-'+String(day).padStart(2,'0'),d=getAttendance(w.id,date);
-      if(d.status==='present'){present++;base+=Number(w.dailyRate)}
-      else if(d.status==='half'){half++;base+=Number(w.dailyRate)*0.5}
-      else if(d.status==='off')off++;else if(d.status==='absent')absent++;
-      const hours=Number(d.ot||0);ot+=hours;otPay+=hours*Number(w.otRate);
-      const label={present:'Present',half:'Half Day',absent:'Absent',off:'Day Off',unrecorded:'Not Recorded'}[d.status]||'Not Recorded';
-      rows.push([date,label,hours,money((d.status==='present'?Number(w.dailyRate):d.status==='half'?Number(w.dailyRate)*0.5:0)+hours*Number(w.otRate))]);
+      const date=month+'-'+String(day).padStart(2,'0');
+      const d=getAttendance(w.id,date),status=d.status;
+      if(status==='present')present++;
+      else if(status==='half')half++;
+      else if(status==='absent')absent++;
+      else if(status==='off')off++;
+      else unrecorded++;
+      const hours=Number(d.ot||0);
+      if(hours>0)otRecords.push({day,hours});
+      const col=(day-1)%columns,row=Math.floor((day-1)/columns);
+      const x=margin+col*(cellW+gap),yy=gridTop+row*(cellH+gap);
+      const color={present:'#06b6d4',half:'#f5ce55',absent:'#ef4444',off:'#ffffff',unrecorded:'#e5e7eb'}[status]||'#e5e7eb';
+      ctx.fillStyle=color;ctx.fillRect(x,yy,cellW,cellH);
+      ctx.lineWidth=1.5;ctx.strokeStyle='#cbd5e1';ctx.strokeRect(x,yy,cellW,cellH);
+      ctx.fillStyle=status==='absent'?'#ffffff':status==='present'?'#073642':status==='half'?'#5b4300':'#374151';
+      ctx.textAlign='center';ctx.font='bold 27px Arial, sans-serif';
+      ctx.fillText(String(day),x+cellW/2,yy+32);
+      const symbol={present:'P',half:'H',absent:'A',off:'O',unrecorded:'-'}[status]||'-';
+      ctx.font='18px Arial, sans-serif';ctx.fillText(symbol,x+cellW/2,yy+57);
+      if(hours>0){ctx.font='bold 13px Arial, sans-serif';ctx.fillText('OT '+hours+'h',x+cellW/2,yy+74)}
+      ctx.textAlign='left';
     }
-    table(['Date','Attendance','OT (hrs)','Daily Pay (RM)'],rows,[30,30,16,24],{font:19,rowH:41,personalAttendanceColors:true});
-    const key=w.id+'_'+month;
-    const total=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):base+otPay;
-    y+=22;line('Present: '+present+' days     Half Day: '+half+'     Day Off: '+off+'     Absent: '+absent+'     OT: '+ot+' hrs',20);
-    line('Basic Pay: RM '+money(base)+'     OT Pay: RM '+money(otPay)+'     Total Salary: RM '+money(total),20);
+    y=gridTop+Math.ceil(daysInMonth(month)/columns)*(cellH+gap)+13;
+    ctx.fillStyle='#eef2f7';ctx.fillRect(margin,y,W-2*margin,55);
+    ctx.font='bold 18px Arial, sans-serif';ctx.fillStyle='#111827';
+    ctx.fillText('Full: '+present+'   Half: '+half+'   Absent: '+absent+'   Off: '+off+'   Unrecorded: '+unrecorded,margin+12,y+23);
+    ctx.fillText('Worked: '+s.presentDays+' days    |    OT: '+s.otHours+' hrs',margin+12,y+46);
+    y+=78;
+    if(otRecords.length){
+      ctx.fillStyle='#111827';ctx.font='bold 20px Arial, sans-serif';ctx.fillText('OT Dates / Hours',margin,y);y+=20;
+      const colW=(W-2*margin)/5;
+      otRecords.forEach((r,i)=>{
+        const col=i%5,row=Math.floor(i/5),px=margin+col*colW,py=y+row*31;
+        ctx.fillStyle='#334155';ctx.font='18px Arial, sans-serif';ctx.fillText(String(r.day).padStart(2,'0')+': '+r.hours+'h',px,py+21);
+      });
+      y+=Math.ceil(otRecords.length/5)*31+19;
+    }
+    ctx.fillStyle='#111827';ctx.font='bold 24px Arial, sans-serif';ctx.fillText('Salary / Advance Summary',margin,y);y+=16;
+    const summaryRows=[
+      ['Basic Pay',s.basePay],
+      ['OT Pay',s.otPay],
+      ['Gross Salary'+(Object.prototype.hasOwnProperty.call(salaryOverrides,w.id+'_'+month)?' (Adjusted)':''),s.totalEarnings],
+      ['Previous Balance',s.previousDebt],
+      ['Advance This Month',s.advance],
+      ['Net Pay',s.net],
+      ['Carry Forward',s.outstandingDebt]
+    ];
+    const sumH=48,sumW=W-2*margin;
+    summaryRows.forEach(([label,amount],i)=>{
+      if(y+sumH>H-bottom){finishPage();startPage()}
+      const isNet=label==='Net Pay',isCarry=label==='Carry Forward';
+      ctx.fillStyle=isNet?'#e6f5eb':isCarry?'#fff7ed':i%2===0?'#f8fafc':'#ffffff';
+      ctx.fillRect(margin,y,sumW,sumH);
+      ctx.strokeStyle='#e2e8f0';ctx.strokeRect(margin,y,sumW,sumH);
+      ctx.fillStyle=isNet?'#15803d':isCarry?'#c2410c':'#111827';
+      ctx.font=(isNet?'bold ':'')+'20px Arial, sans-serif';ctx.textBaseline='middle';
+      ctx.fillText(label,margin+17,y+sumH/2);
+      ctx.textAlign='right';ctx.fillText('RM '+money(amount),W-margin-17,y+sumH/2);
+      ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      y+=sumH;
+    });
+    y+=12;
+    ctx.fillStyle='#64748b';ctx.font='16px Arial, sans-serif';
+    ctx.fillText('Net Pay = max(0, Gross Salary - Previous Balance - Advance)',margin,y);
   }
   finishPage();
   return {pages,W,H,month};

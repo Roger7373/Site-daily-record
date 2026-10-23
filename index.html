@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111827">
 <meta name="description" content="工地工人日勤、OT、预支薪水和月尾薪资">
 <link rel="manifest" href="/Site-daily-record/manifest.json">
-<title>Site Daily Record V5.2</title>
+<title>Site Daily Record V5.3</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827;padding-bottom:75px}
@@ -182,7 +182,7 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 #advanceLedgerModal .modal-box{max-width:550px}
 @media(max-width:380px){.adv-record{flex-wrap:wrap}.adv-record-actions{width:100%;justify-content:flex-end}}
 
-/* Compact V5.2 personal report: colored daily cells; detailed pay table remains expandable. */
+/* Compact V5.3 personal report: colored daily cells; detailed pay table remains expandable. */
 .personal-day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:12px 0}
 .personal-day-square{min-width:0;border-radius:7px;text-align:center;padding:7px 1px 6px;background:#e5e7eb;color:#374151;font-size:11px;min-height:48px}
 .personal-day-square b{display:block;font-size:16px;margin-bottom:3px}
@@ -196,12 +196,19 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 .personal-summary-amount.personal-net{font-size:17px;font-weight:bold;border-top:2px solid #94a3b8;margin-top:7px;padding-top:10px;color:#15803d}
 .personal-summary-amount.personal-carry{color:#c2410c}
 @media(min-width:700px){.personal-day-grid{grid-template-columns:repeat(10,minmax(0,1fr))}}
+/* V5.3 monthly allowance editor, placed under the OT pay row. */
+.allowance-entry{grid-column:1/-1;text-align:left;border:1px solid #bae6fd;background:#f0f9ff;border-radius:10px;padding:12px}
+.allowance-entry label{margin:0;font-weight:bold;color:#0c4a6e}
+.allowance-entry input{max-width:230px;background:white;margin-top:7px}
+.allowance-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.allowance-actions button{min-height:38px}
+.allowance-hint{font-size:12px;line-height:1.6;color:#475569;margin-top:8px}
 </style>
 </head>
 <body>
-<header><h1>🏗️ Site Daily Record <span style="font-size:12px;color:#cbd5e1">V5.2</span></h1><p>工人日勤 · OT · 预支薪水 · 月尾结算</p></header>
+<header><h1>🏗️ Site Daily Record <span style="font-size:12px;color:#cbd5e1">V5.3</span></h1><p>工人日勤 · OT · 预支薪水 · 月尾结算</p></header>
 
-<div id="appModeIndicator">🧪 V5.2 测试模式：资料与正式 App 分开储存，修改不会影响旧 App。</div>
+<div id="appModeIndicator">🧪 V5.3 测试模式：资料与正式 App 分开储存，修改不会影响旧 App。</div>
 <div class="container">
 <section id="page-workers" class="page active">
   <div class="card no-print">
@@ -245,7 +252,7 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
   <div class="card"><h2>💰 薪资</h2>
     <label>结算月份<input type="month" id="salaryMonth" onchange="renderSalary()"></label>
   </div>
-  <div class="card"><div class="v5-muted">预支超过本月工资的部分，会自动结转下个月；历史手动调整工资也会计入计算。尚欠余额不会重复记录为新的预支。修改旧月份的预支或工资，会重新计算后续月份。</div></div>
+  <div class="card"><div class="v5-muted">Allowance（津贴）加入本月收入，固定津贴可从指定月份起自动带入，也可单独修改某个月。预支超过本月工资的部分，会自动结转下个月；历史手动调整工资也会计入计算。尚欠余额不会重复记录为新的预支。修改旧月份的预支或工资，会重新计算后续月份。</div></div>
   <div id="salaryList"></div>
 </section>
 
@@ -361,13 +368,14 @@ body.test-mode #appModeIndicator{display:block;background:#ffedd5;color:#9a3412;
 <script>
 // Production retains all original V4 keys. The independent test file uses isolated keys.
 const TEST_MODE=document.documentElement.dataset.testMode==='true';
-const WORKER_KEY=TEST_MODE?'siteWorkersV52Test':'siteWorkers';
-const ATT_KEY=TEST_MODE?'siteAttendanceV52Test':'siteAttendance';
-const ADVANCE_KEY=TEST_MODE?'siteAdvancesV52Test':'siteAdvances';
-const SALARY_KEY=TEST_MODE?'siteSalaryOverridesV52Test':'siteSalaryOverrides';
-const SITE_KEY=TEST_MODE?'siteSitesV52Test':'siteDailySitesV5';
-const RECOVERY_KEY=TEST_MODE?'siteV52TestRestorePoint':'siteV5PreRestorePoint';
-const storeKeys=[WORKER_KEY,ATT_KEY,ADVANCE_KEY,SALARY_KEY,SITE_KEY];
+const WORKER_KEY=TEST_MODE?'siteWorkersV53Test':'siteWorkers';
+const ATT_KEY=TEST_MODE?'siteAttendanceV53Test':'siteAttendance';
+const ADVANCE_KEY=TEST_MODE?'siteAdvancesV53Test':'siteAdvances';
+const SALARY_KEY=TEST_MODE?'siteSalaryOverridesV53Test':'siteSalaryOverrides';
+const SITE_KEY=TEST_MODE?'siteSitesV53Test':'siteDailySitesV5';
+const ALLOWANCE_KEY=TEST_MODE?'siteMonthlyAllowancesV53Test':'siteMonthlyAllowancesV53';
+const RECOVERY_KEY=TEST_MODE?'siteV53TestRestorePoint':'siteV5PreRestorePoint';
+const storeKeys=[WORKER_KEY,ATT_KEY,ADVANCE_KEY,SALARY_KEY,SITE_KEY,ALLOWANCE_KEY];
 const storageReadErrors=[];
 function readLocal(key,fallback){try{const v=localStorage.getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){storageReadErrors.push(key);console.error('读取资料失败',key,e);return fallback}}
 let workers=readLocal(WORKER_KEY,[]);
@@ -375,6 +383,7 @@ let attendance=readLocal(ATT_KEY,{});
 let advances=readLocal(ADVANCE_KEY,[]);
 let salaryOverrides=readLocal(SALARY_KEY,{});
 let sites=readLocal(SITE_KEY,[]);
+let monthlyAllowances=readLocal(ALLOWANCE_KEY,{defaults:{},monthly:{}});
 let backupExportedThisSession=false;
 
 let selectedAdvanceWorker=null;
@@ -386,7 +395,7 @@ let editingWorkerId=null;
 function saveData(){
   if(storageReadErrors.length){alert('旧资料读取异常，为避免覆盖，已停止保存。请先导出 JSON 备份并检查资料。');throw new Error('Stored data failed to parse: '+storageReadErrors.join(','))}
   const before=storeKeys.map(k=>localStorage.getItem(k));
-  const next=[workers,attendance,advances,salaryOverrides,sites].map(x=>JSON.stringify(x));
+  const next=[workers,attendance,advances,salaryOverrides,sites,monthlyAllowances].map(x=>JSON.stringify(x));
   try{
     storeKeys.forEach((key,i)=>localStorage.setItem(key,next[i]));
     refreshBackupStatus();
@@ -590,13 +599,60 @@ function knownMonthsForWorker(workerId,throughMonth){
   });
   advances.forEach(a=>{if(a.workerId===workerId&&/^\d{4}-\d{2}-\d{2}$/.test(a.date))months.add(a.date.slice(0,7))});
   Object.keys(salaryOverrides).forEach(k=>{if(k.startsWith(workerId+'_')&&/^\d{4}-\d{2}$/.test(k.slice(workerId.length+1)))months.add(k.slice(workerId.length+1))});
-  return Array.from(months).filter(m=>m<=throughMonth).sort();
+  // Include months with allowance settings even when no attendance was recorded.
+  Object.keys(monthlyAllowances.monthly||{}).forEach(k=>{if(k.startsWith(workerId+'_')&&/^\d{4}-\d{2}$/.test(k.slice(workerId.length+1)))months.add(k.slice(workerId.length+1))});
+  ((monthlyAllowances.defaults||{})[workerId]||[]).forEach(e=>{if(/^\d{4}-\d{2}$/.test(e.month))months.add(e.month)});
+  const sorted=Array.from(months).filter(m=>m<=throughMonth).sort();
+  if(!sorted.length)return [];
+  // Fixed allowances accrue every month, including months with no attendance.
+  const continuous=[],[startY,startM]=sorted[0].split('-').map(Number);
+  let y=startY,m=startM;
+  while(y*12+m <= Number(throughMonth.slice(0,4))*12+Number(throughMonth.slice(5,7)) && continuous.length<1200){
+    continuous.push(y+'-'+String(m).padStart(2,'0'));
+    m++;if(m>12){m=1;y++}
+  }
+  return continuous;
+}
+// A worker can have historical default rates (effective from a given month) and
+// a one-month override. Neither edits past-month defaults retroactively.
+function getAllowance(workerId,month){
+  const overrideKey=workerId+'_'+month;
+  const specific=monthlyAllowances.monthly||{};
+  if(Object.prototype.hasOwnProperty.call(specific,overrideKey))return Number(specific[overrideKey])||0;
+  const history=(monthlyAllowances.defaults||{})[workerId]||[];
+  const active=history.filter(x=>x.month<=month).sort((a,b)=>b.month.localeCompare(a.month))[0];
+  return active?Number(active.amount)||0:0;
+}
+function readAllowanceInput(workerId){
+  const field=document.getElementById('allowance-'+workerId);
+  if(!field)return null;
+  const raw=field.value.trim(),value=Number(raw);
+  if(raw===''||!/^\d+(\.\d{1,2})?$/.test(raw)||!Number.isFinite(value)||value<0){alert('请输入有效的 Allowance，最多两位小数（无津贴请输入 0）');field.focus();return null}
+  return Number(value.toFixed(2));
+}
+function saveMonthlyAllowance(workerId,month){
+  const amount=readAllowanceInput(workerId);if(amount===null)return;
+  if(!monthlyAllowances.monthly)monthlyAllowances.monthly={};
+  monthlyAllowances.monthly[workerId+'_'+month]=amount;
+  saveData();renderSalary();renderSummary();renderPersonalAttendance();
+}
+function setRecurringAllowance(workerId,month){
+  const amount=readAllowanceInput(workerId);if(amount===null)return;
+  const w=workers.find(x=>x.id===workerId);if(!w)return;
+  if(!confirm('把 '+w.name+' 的固定津贴设为 RM '+money(amount)+' / 月，从 '+month+' 开始生效？\n\n较早月份的津贴不受影响；本月已有的单独设置会改用新固定津贴。'))return;
+  if(!monthlyAllowances.defaults)monthlyAllowances.defaults={};
+  const history=Array.isArray(monthlyAllowances.defaults[workerId])?monthlyAllowances.defaults[workerId]:[];
+  monthlyAllowances.defaults[workerId]=[...history.filter(e=>e.month!==month),{month,amount}].sort((a,b)=>a.month.localeCompare(b.month));
+  if(monthlyAllowances.monthly)delete monthlyAllowances.monthly[workerId+'_'+month];
+  saveData();renderSalary();renderSummary();renderPersonalAttendance();
 }
 function getMonthEarningsCents(worker,month){
+  // Existing manual salary adjustments mean base + OT, excluding allowance.
   const key=worker.id+'_'+month;
-  if(Object.prototype.hasOwnProperty.call(salaryOverrides,key))return toCents(salaryOverrides[key]);
-  const d=getMonthData(worker.id,month);
-  return toCents(d.presentDays*Number(worker.dailyRate)+d.otHours*Number(worker.otRate));
+  let baseAndOT;
+  if(Object.prototype.hasOwnProperty.call(salaryOverrides,key))baseAndOT=toCents(salaryOverrides[key]);
+  else {const d=getMonthData(worker.id,month);baseAndOT=toCents(d.presentDays*Number(worker.dailyRate)+d.otHours*Number(worker.otRate));}
+  return baseAndOT+toCents(getAllowance(worker.id,month));
 }
 function getPreviousDebt(workerId,month){
   const worker=workers.find(w=>w.id===workerId);if(!worker)return 0;
@@ -610,15 +666,16 @@ function calculateSalary(worker,month){
   const d=getMonthData(worker.id,month);
   const basePayCents=toCents(d.presentDays*Number(worker.dailyRate));
   const otPayCents=toCents(d.otHours*Number(worker.otRate));
+  const allowanceCents=toCents(getAllowance(worker.id,month));
   const currentAdvanceCents=toCents(getAdvance(worker.id,month));
   const previousDebtCents=toCents(getPreviousDebt(worker.id,month));
-  const calculatedEarningsCents=basePayCents+otPayCents;
+  const calculatedEarningsCents=basePayCents+otPayCents+allowanceCents;
   const totalEarningsCents=getMonthEarningsCents(worker,month);
   const totalDeductionCents=previousDebtCents+currentAdvanceCents;
   const netCents=Math.max(0,totalEarningsCents-totalDeductionCents);
   const outstandingDebtCents=Math.max(0,totalDeductionCents-totalEarningsCents);
   return {
-    presentDays:d.presentDays,fullDays:d.fullDays,halfDays:d.halfDays,otHours:d.otHours,basePay:basePayCents/100,otPay:otPayCents/100,
+    presentDays:d.presentDays,fullDays:d.fullDays,halfDays:d.halfDays,otHours:d.otHours,basePay:basePayCents/100,otPay:otPayCents/100,allowance:allowanceCents/100,
     advance:currentAdvanceCents/100,previousDebt:previousDebtCents/100,
     calculatedEarnings:calculatedEarningsCents/100,totalEarnings:totalEarningsCents/100,
     net:netCents/100,outstandingDebt:outstandingDebtCents/100,
@@ -628,8 +685,8 @@ function calculateSalary(worker,month){
 function editSalary(workerId,month){
   const w=workers.find(x=>x.id===workerId);if(!w)return;
   const key=workerId+"_"+month;
-  const current=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculateSalary(w,month).totalEarnings;
-  const value=prompt(w.name+" - "+month+"\n\n修改本月工资（基本 + OT）RM：",current);
+  const current=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculateSalary(w,month).basePay+calculateSalary(w,month).otPay;
+  const value=prompt(w.name+" - "+month+"\n\n修改本月工资（仅基本 + OT，不含 Allowance）RM：",current);
   if(value===null)return;
   const amount=Number(value);
   if(!Number.isFinite(amount)||amount<0){alert("请输入正确的工资金额");return}
@@ -695,7 +752,8 @@ function renderAdvanceLedger(){
   const safeId=JSON.stringify(w.id).replace(/"/g,'&quot;');
   document.getElementById('advanceLedgerContent').innerHTML=`
     <div class="adv-ledger">
-      <div class="adv-ledger-item"><span>本月工资</span><strong>RM ${money(s.totalEarnings)}</strong></div>
+      <div class="adv-ledger-item"><span>本月工资（含津贴）</span><strong>RM ${money(s.totalEarnings)}</strong></div>
+      <div class="adv-ledger-item"><span>Allowance 津贴</span><strong>RM ${money(s.allowance)}</strong></div>
       <div class="adv-ledger-item"><span>上月结转</span><strong>RM ${money(s.previousDebt)}</strong></div>
       <div class="adv-ledger-item"><span>本月新增预支</span><strong>RM ${money(s.advance)}</strong></div>
       <div class="adv-ledger-item adv-net"><span>本月实际应付</span><strong>RM ${money(s.net)}</strong></div>
@@ -722,16 +780,25 @@ function renderSalary(){
         <div class="stat"><div class="stat-title">OT 小时</div><div class="stat-value">${s.otHours}</div></div>
         <div class="stat"><div class="stat-title">基本工资</div><div class="stat-value">RM ${money(s.basePay)}</div></div>
         <div class="stat"><div class="stat-title">OT 工资</div><div class="stat-value">RM ${money(s.otPay)}</div></div>
+        <div class="allowance-entry">
+          <label for="allowance-${escapeHTML(w.id)}">Allowance · 每月津贴（RM）</label>
+          <input id="allowance-${escapeHTML(w.id)}" type="number" min="0" step="0.01" value="${money(s.allowance)}" inputmode="decimal">
+          <div class="allowance-actions">
+            <button class="btn-primary" onclick='saveMonthlyAllowance(${JSON.stringify(w.id)},${JSON.stringify(month)})'>保存本月金额</button>
+            <button class="btn-gray" onclick='setRecurringAllowance(${JSON.stringify(w.id)},${JSON.stringify(month)})'>设为从本月起每月固定</button>
+          </div>
+          <div class="allowance-hint">只填这一月请按「保存本月金额」。经常有相同津贴可设为固定，以后每月自动带入；下个月也可以单独修改。</div>
+        </div>
       </div>
       <div style="margin-top:15px">
-        <div>本月工资：<span class="amount">RM ${money(s.totalEarnings)}</span>${edited?'<span class="small">（已手动修改）</span>':''}</div>
+        <div>本月工资（含津贴）：<span class="amount">RM ${money(s.totalEarnings)}</span>${edited?'<span class="small">（已手动修改）</span>':''}</div>
         <div style="margin-top:6px">上月结转：<span class="amount">RM ${money(s.previousDebt)}</span></div>
         <div style="margin-top:6px">本月新增预支：<span class="amount">RM ${money(s.advance)}</span></div>
         <hr><div class="total">本月应付：RM ${money(s.net)}</div>
         ${s.outstandingDebt>0?`<div style="margin-top:10px;padding:10px;background:#fff7ed;border-radius:8px;color:#c2410c;font-weight:bold">结转下个月：RM ${money(s.outstandingDebt)}</div>`:""}
       </div>
       <details class="v5-detail"><summary>查看工资及工地明细</summary>
-        <div class="v5-muted">工资 = ${s.presentDays} 天 × RM ${money(w.dailyRate)} + ${s.otHours}h × RM ${money(w.otRate)}。原有手动工资调整继续优先采用。</div>
+        <div class="v5-muted">工资 = ${s.presentDays} 天 × RM ${money(w.dailyRate)} + ${s.otHours}h × RM ${money(w.otRate)} + Allowance RM ${money(s.allowance)}。原有手动工资调整只覆盖基本 + OT，津贴另外加上。</div>
         <div class="v5-muted" style="margin-top:8px">本月预支：${advances.filter(a=>a.workerId===w.id&&a.date&&a.date.startsWith(month)).length} 笔</div>
         <ul>${advances.filter(a=>a.workerId===w.id&&a.date&&a.date.startsWith(month)).map(a=>'<li>'+escapeHTML(a.date)+' — RM '+money(a.amount)+'</li>').join('')||'<li>无预支记录</li>'}</ul>
         <div class="v5-muted">工地分配（按当前 Daily / OT 单价估算，未拆分手动调整）：</div>
@@ -749,15 +816,16 @@ function renderSalary(){
 function renderSummary(){
   const month=document.getElementById("summaryMonth").value||getMonth(),box=document.getElementById("summaryContent");
   if(!workers.length){box.innerHTML='<div class="card empty">还没有工人</div>';return}
-  let totalBase=0,totalOT=0,totalEarnings=0,totalPreviousDebt=0,totalAdvance=0,totalNet=0,totalOutstandingDebt=0;
+  let totalBase=0,totalOT=0,totalAllowance=0,totalEarnings=0,totalPreviousDebt=0,totalAdvance=0,totalNet=0,totalOutstandingDebt=0;
   const rows=workers.map(w=>{
     const s=calculateSalary(w,month);
-    totalBase+=s.basePay;totalOT+=s.otPay;totalEarnings+=s.totalEarnings;totalPreviousDebt+=s.previousDebt;totalAdvance+=s.advance;totalNet+=s.net;totalOutstandingDebt+=s.outstandingDebt;
-    return `<tr><td><b>${escapeHTML(w.name)}</b></td><td>${s.presentDays}</td><td>${s.otHours}</td><td>RM ${money(s.basePay)}</td><td>RM ${money(s.otPay)}</td><td>RM ${money(s.totalEarnings)}</td><td>RM ${money(s.previousDebt)}</td><td>RM ${money(s.advance)}</td><td><b>RM ${money(s.net)}</b></td><td>${s.outstandingDebt>0?`<span style="color:#c2410c;font-weight:bold">RM ${money(s.outstandingDebt)}</span>`:"RM 0.00"}</td></tr>`;
+    totalBase+=s.basePay;totalOT+=s.otPay;totalAllowance+=s.allowance;totalEarnings+=s.totalEarnings;totalPreviousDebt+=s.previousDebt;totalAdvance+=s.advance;totalNet+=s.net;totalOutstandingDebt+=s.outstandingDebt;
+    return `<tr><td><b>${escapeHTML(w.name)}</b></td><td>${s.presentDays}</td><td>${s.otHours}</td><td>RM ${money(s.basePay)}</td><td>RM ${money(s.otPay)}</td><td>RM ${money(s.allowance)}</td><td>RM ${money(s.totalEarnings)}</td><td>RM ${money(s.previousDebt)}</td><td>RM ${money(s.advance)}</td><td><b>RM ${money(s.net)}</b></td><td>${s.outstandingDebt>0?`<span style="color:#c2410c;font-weight:bold">RM ${money(s.outstandingDebt)}</span>`:"RM 0.00"}</td></tr>`;
   }).join("");
   box.innerHTML=`<div class="card"><div class="grid">
     <div class="stat"><div class="stat-title">基本工资</div><div class="stat-value">RM ${money(totalBase)}</div></div>
     <div class="stat"><div class="stat-title">OT 工资</div><div class="stat-value">RM ${money(totalOT)}</div></div>
+    <div class="stat"><div class="stat-title">Allowance 津贴</div><div class="stat-value">RM ${money(totalAllowance)}</div></div>
     <div class="stat"><div class="stat-title">总工资</div><div class="stat-value">RM ${money(totalEarnings)}</div></div>
     <div class="stat"><div class="stat-title">本月预支</div><div class="stat-value">RM ${money(totalAdvance)}</div></div>
   </div><div style="margin-top:15px;padding:12px;background:#f9fafb;border-radius:10px">
@@ -766,10 +834,10 @@ function renderSummary(){
     <div style="margin-bottom:8px">实际应付：<b>RM ${money(totalNet)}</b></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;color:#c2410c;font-weight:bold">结转下个月：RM ${money(totalOutstandingDebt)}</div>
   </div></div>
-  <div class="card"><h2>${month} 月尾结算</h2><div class="table-wrap"><table><thead><tr><th>工人</th><th>出勤</th><th>OT</th><th>基本</th><th>OT薪资</th><th>本月工资</th><th>上月结转</th><th>本月预支</th><th>应付</th><th>下月结转</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  <div class="card"><h2>${month} 月尾结算</h2><div class="table-wrap"><table><thead><tr><th>工人</th><th>出勤</th><th>OT</th><th>基本</th><th>OT薪资</th><th>Allowance</th><th>本月工资</th><th>上月结转</th><th>本月预支</th><th>应付</th><th>下月结转</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   const breakdown=getSiteBreakdown(month);
   document.getElementById('siteMonthSummary').innerHTML=`<div class="card"><h2>🏗️ 各工地出勤 / 人工费统计</h2>
-    <div class="v5-muted">只是按目前工资单价分配工地成本，不改变月尾结算；手动调整、上月欠款和预支不分配到各工地。</div>
+    <div class="v5-muted">只是按目前工资单价分配工地成本，不改变月尾结算；手动调整、津贴、上月欠款和预支不分配到各工地。</div>
     ${breakdown.length?`<div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>工地</th><th>出勤天数</th><th>OT (h)</th><th>估算工资</th></tr></thead><tbody>${breakdown.map(a=>`<tr><td>${escapeHTML(siteName(a.siteId))}</td><td>${a.days}</td><td>${a.hours}</td><td>RM ${money(a.amount)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="v5-muted" style="margin-top:10px">本月尚无工地出勤记录</div>'}
   </div>`;
 }
@@ -822,6 +890,7 @@ function renderPersonalAttendance(){
       <div>折算出勤：<b>${s.presentDays} 天</b>（全天 ${present} · 半天 ${half}）　OT：<b>${s.otHours} h</b></div>
       <div class="personal-summary-amount"><span>Basic Pay · 基本工资</span><strong>RM ${money(s.basePay)}</strong></div>
       <div class="personal-summary-amount"><span>OT Pay · 加班工资</span><strong>RM ${money(s.otPay)}</strong></div>
+      <div class="personal-summary-amount"><span>Allowance · 每月津贴</span><strong>RM ${money(s.allowance)}</strong></div>
       <div class="personal-summary-amount"><span>Gross Salary · 本月工资${Object.prototype.hasOwnProperty.call(salaryOverrides,key)?'（已手动调整）':''}</span><strong>RM ${money(s.totalEarnings)}</strong></div>
       <div class="personal-summary-amount"><span>Previous Balance · 上月结转</span><strong>RM ${money(s.previousDebt)}</strong></div>
       <div class="personal-summary-amount"><span>Advance · 本月预支</span><strong>RM ${money(s.advance)}</strong></div>
@@ -1082,7 +1151,7 @@ function getPersonalReportText(){
   }
   const calculated=base+otPay,key=w.id+"_"+month,final=Object.prototype.hasOwnProperty.call(salaryOverrides,key)?Number(salaryOverrides[key]):calculated;
   const s=calculateSalary(w,month);
-  text+=`\n出勤：${present}天\n半天：${half}天\n折算出勤：${s.presentDays}天\n休息：${off}天\n缺勤：${absent}天\nOT：${s.otHours}小时\n基本工资：RM ${money(s.basePay)}\nOT工资：RM ${money(s.otPay)}\n本月工资：RM ${money(s.totalEarnings)}\n上月结转：RM ${money(s.previousDebt)}\n本月预支：RM ${money(s.advance)}\n实际应付：RM ${money(s.net)}\n下月结转：RM ${money(s.outstandingDebt)}`;
+  text+=`\n出勤：${present}天\n半天：${half}天\n折算出勤：${s.presentDays}天\n休息：${off}天\n缺勤：${absent}天\nOT：${s.otHours}小时\n基本工资：RM ${money(s.basePay)}\nOT工资：RM ${money(s.otPay)}\nAllowance 津贴：RM ${money(s.allowance)}\n本月工资（含津贴）：RM ${money(s.totalEarnings)}\n上月结转：RM ${money(s.previousDebt)}\n本月预支：RM ${money(s.advance)}\n实际应付：RM ${money(s.net)}\n下月结转：RM ${money(s.outstandingDebt)}`;
   return text;
 }
 async function copyPersonalReport(){
@@ -1101,12 +1170,13 @@ function printPersonal(){ openReportPreview("personal"); }
   if(!workers.length)return "";
 
   let text=`${month} 月尾结算报告\n\n`;
-  let totalNet=0,totalEarnings=0,totalAdvance=0,totalDebt=0;
+  let totalNet=0,totalEarnings=0,totalAllowance=0,totalAdvance=0,totalDebt=0;
 
   workers.forEach(w=>{
     const s=calculateSalary(w,month);
 
     totalEarnings+=s.totalEarnings;
+    totalAllowance+=s.allowance;
     totalAdvance+=s.advance;
     totalNet+=s.net;
     totalDebt+=s.outstandingDebt;
@@ -1115,7 +1185,8 @@ function printPersonal(){ openReportPreview("personal"); }
       `${w.name}\n`+
       `出勤：${s.presentDays} 天\n`+
       `OT：${s.otHours} 小时\n`+
-      `本月工资：RM ${money(s.totalEarnings)}\n`+
+      `本月工资（含津贴）：RM ${money(s.totalEarnings)}\n`+
+      `Allowance：RM ${money(s.allowance)}\n`+
       `上月欠款：RM ${money(s.previousDebt)}\n`+
       `本月预支：RM ${money(s.advance)}\n`+
       `应付：RM ${money(s.net)}\n`+
@@ -1125,6 +1196,7 @@ function printPersonal(){ openReportPreview("personal"); }
   text+=
     `========== 总结 ==========\n`+
     `总工资：RM ${money(totalEarnings)}\n`+
+    `津贴合计：RM ${money(totalAllowance)}\n`+
     `本月预支：RM ${money(totalAdvance)}\n`+
     `实际应付：RM ${money(totalNet)}\n`+
     `尚欠预支：RM ${money(totalDebt)}`;
@@ -1238,15 +1310,15 @@ function pdfV4Pages(type){
   }
   startPage();
   if(type==='summary'){
-    const head=['Worker','Days Worked','Gross Salary (RM)','Advance (RM)','Net Pay (RM)','OT (hrs)'];
-    let days=0,earn=0,adv=0,net=0,ot=0;
+    const head=['Worker','Days','Gross Salary (RM)','Allowance (RM)','Advance (RM)','Net Pay (RM)','OT (hrs)'];
+    let days=0,earn=0,allow=0,adv=0,net=0,ot=0;
     const rows=workers.map(w=>{
       const s=calculateSalary(w,month);
-      days+=s.presentDays;earn+=s.totalEarnings;adv+=s.advance;net+=s.net;ot+=s.otHours;
-      return [w.name,s.presentDays,money(s.totalEarnings),money(s.advance),money(s.net),s.otHours];
+      days+=s.presentDays;earn+=s.totalEarnings;allow+=s.allowance;adv+=s.advance;net+=s.net;ot+=s.otHours;
+      return [w.name,s.presentDays,money(s.totalEarnings),money(s.allowance),money(s.advance),money(s.net),s.otHours];
     });
-    rows.push(['TOTAL',days,money(earn),money(adv),money(net),ot]);
-    table(head,rows,[30,15,24,21,23,13],{font:19,rowH:52});
+    rows.push(['TOTAL',days,money(earn),money(allow),money(adv),money(net),ot]);
+    table(head,rows,[27,12,21,18,17,18,10],{font:18,rowH:52});
     y+=22;line('Advance Balance Carry-Forward (not counted again as new advances)',19);
     const carryRows=workers.map(w=>{const s=calculateSalary(w,month);return [w.name,money(s.previousDebt),money(s.advance),money(s.outstandingDebt)]});
     carryRows.push(['TOTAL',money(workers.reduce((v,w)=>v+calculateSalary(w,month).previousDebt,0)),money(adv),money(workers.reduce((v,w)=>v+calculateSalary(w,month).outstandingDebt,0))]);
@@ -1257,7 +1329,7 @@ function pdfV4Pages(type){
     const s=calculateSalary(w,month);
     line('Worker: '+w.name+'    Period: '+month,22);
     table(['Description','Amount (RM)'],[
-      ['Monthly Salary',money(s.totalEarnings)],['Previous Balance',money(s.previousDebt)],
+      ['Monthly Salary (inc. Allowance)',money(s.totalEarnings)],['Allowance Included',money(s.allowance)],['Previous Balance',money(s.previousDebt)],
       ['New Advances This Month',money(s.advance)],['Net Payable',money(s.net)],
       ['Balance Carried Forward',money(s.outstandingDebt)]
     ],[60,40],{font:19,rowH:50});
@@ -1360,6 +1432,7 @@ function pdfV4Pages(type){
     const summaryRows=[
       ['Basic Pay',s.basePay],
       ['OT Pay',s.otPay],
+      ['Allowance',s.allowance],
       ['Gross Salary'+(Object.prototype.hasOwnProperty.call(salaryOverrides,w.id+'_'+month)?' (Adjusted)':''),s.totalEarnings],
       ['Previous Balance',s.previousDebt],
       ['Advance This Month',s.advance],
@@ -1442,13 +1515,13 @@ async function openReportPreview(type){
 
 // V5: user-exportable, portable JSON backup. No automatic data upload or cloud sync.
 function currentPayload(){
-  return {app:'Site Daily Record',schemaVersion:5.2,exportedAt:new Date().toISOString(),data:{workers,attendance,advances,salaryOverrides,sites}};
+  return {app:'Site Daily Record',schemaVersion:5.3,exportedAt:new Date().toISOString(),data:{workers,attendance,advances,salaryOverrides,sites,monthlyAllowances}};
 }
 function refreshBackupStatus(){
   const target=document.getElementById('backupStatus');if(!target)return;
   const dates=Object.keys(attendance).filter(k=>/^\d{4}-\d{2}-\d{2}_/.test(k));
   if(storageReadErrors.length){target.textContent='⚠️ 有原始资料读取失败：'+storageReadErrors.join('、')+'。请勿继续编辑，先导出备份或联络协助。';return}
-  target.textContent=(TEST_MODE?'测试储存空间 · ':'目前本机资料 · ')+workers.length+' 位工人 · '+dates.length+' 条日勤 · '+advances.length+' 笔预支 · '+Object.keys(salaryOverrides).length+' 条工资修改 · '+sites.length+' 个工地。'+(backupExportedThisSession?' 已启动备份导出。':' 建议先点「备份全部资料」。');
+  target.textContent=(TEST_MODE?'测试储存空间 · ':'目前本机资料 · ')+workers.length+' 位工人 · '+dates.length+' 条日勤 · '+advances.length+' 笔预支 · '+Object.keys(salaryOverrides).length+' 条工资修改 · '+Object.keys(monthlyAllowances.monthly||{}).length+' 条当月津贴 · '+Object.values(monthlyAllowances.defaults||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0)+' 条固定津贴设置 · '+sites.length+' 个工地。'+(backupExportedThisSession?' 已启动备份导出。':' 建议先点「备份全部资料」。');
 }
 function saveBlob(blob,name){
   const url=URL.createObjectURL(blob),link=document.createElement('a');
@@ -1476,6 +1549,13 @@ function validBackup(data){
   if(!data.workers.every(w=>hasId(w)&&typeof w.name==='string'&&validMoney(w.dailyRate)&&validMoney(w.otRate)))return false;
   if(!data.advances.every(a=>hasId(a)&&typeof a.workerId==='string'&&typeof a.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(a.date)&&validMoney(a.amount)))return false;
   if(!data.sites.every(s=>hasId(s)&&typeof s.name==='string'))return false;
+  // V5.2 backups have no allowance data: restore safely as zero allowance.
+  if(data.monthlyAllowances!==undefined){
+    const a=data.monthlyAllowances;
+    if(!a||typeof a!=='object'||Array.isArray(a)||!a.defaults||!a.monthly||typeof a.defaults!=='object'||typeof a.monthly!=='object'||Array.isArray(a.defaults)||Array.isArray(a.monthly))return false;
+    if(!Object.values(a.monthly).every(validMoney))return false;
+    if(!Object.values(a.defaults).every(h=>Array.isArray(h)&&h.every(e=>e&&/^\d{4}-\d{2}$/.test(e.month)&&validMoney(e.amount))))return false;
+  }
   if(!Object.entries(data.attendance).every(([k,v])=>/^\d{4}-\d{2}-\d{2}_.+/.test(k)&&v&&typeof v==='object'&&['present','half','absent','off','unrecorded'].includes(v.status)&&validMoney(v.ot||0)))return false;
   if(!Object.values(data.salaryOverrides).every(validMoney))return false;
   return true;
@@ -1494,10 +1574,10 @@ async function restoreBackupFromInput(input){
     try{
       localStorage.setItem(RECOVERY_KEY,JSON.stringify(currentPayload()));
     }catch(e){alert('无法安全建立恢复点（储存空间不足）。请先释放空间，原有资料未修改。');return}
-    const next=[d.workers,d.attendance,d.advances,d.salaryOverrides,d.sites].map(JSON.stringify);
+    const next=[d.workers,d.attendance,d.advances,d.salaryOverrides,d.sites,d.monthlyAllowances||{defaults:{},monthly:{}}].map(JSON.stringify);
     try{storeKeys.forEach((k,i)=>localStorage.setItem(k,next[i]));}
     catch(e){storeKeys.forEach((k,i)=>{try{before[i]===null?localStorage.removeItem(k):localStorage.setItem(k,before[i])}catch(_){}});throw e}
-    workers=d.workers;attendance=d.attendance;advances=d.advances;salaryOverrides=d.salaryOverrides;sites=d.sites;
+    workers=d.workers;attendance=d.attendance;advances=d.advances;salaryOverrides=d.salaryOverrides;sites=d.sites;monthlyAllowances=d.monthlyAllowances||{defaults:{},monthly:{}};
     refreshBackupStatus();renderWorkers();renderAttendance();renderSalary();renderSummary();renderPersonalWorkerOptions();renderPersonalAttendance();renderAttendanceSummary();
     alert('备份恢复成功。恢复前资料另有一个本机恢复点，但仍请妥善保留外部 JSON 文件。');
   }catch(e){console.error('恢复失败',e);alert('恢复失败：'+(e.message||e)+'。旧资料没有被主动清除。')}
